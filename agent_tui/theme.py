@@ -4,7 +4,7 @@ Single source of truth for color values used in Python code (Rich markup,
 `Content.styled`, `Content.from_markup`).  CSS-side styling should reference
 Textual CSS variables: built-in variables
 (`$primary`, `$background`, `$text-muted`, `$error-muted`, etc.) are set via
-`register_theme()` in `DeepAgentsApp.__init__`, while the few app-specific
+`register_theme()` in `AgentTuiApp.__init__`, while the few app-specific
 variables (`$mode-bash`, `$mode-command`, `$skill`, `$skill-hover`, `$tool`,
 `$tool-hover`) are backed by these constants via `App.get_theme_variable_defaults()`.
 
@@ -353,7 +353,7 @@ DARK_COLORS = ThemeColors(
     background=AT_DARK,
     surface=AT_CARD,
 )
-"""Color set for the dark LangChain theme."""
+"""Color set for the dark Agent theme."""
 
 LIGHT_COLORS = ThemeColors(
     primary=AT_LIGHT_BLUE,
@@ -374,7 +374,7 @@ LIGHT_COLORS = ThemeColors(
     background=AT_LIGHT_BG,
     surface=AT_LIGHT_SURFACE,
 )
-"""Color set for the light LangChain theme."""
+"""Color set for the light Agent theme."""
 
 
 # ---------------------------------------------------------------------------
@@ -398,7 +398,7 @@ class ThemeEntry:
     custom: bool = True
     """Whether this theme must be registered with Textual via `register_theme()`.
 
-    `True` for LangChain-branded themes and user-defined themes.
+    `True` for Agent-branded themes and user-defined themes.
     `False` for Textual built-in themes that Textual already knows about.
     """
 
@@ -427,12 +427,12 @@ def _builtin_themes() -> dict[str, ThemeEntry]:
     """
     r: dict[str, ThemeEntry] = {}
     r["agent-dark"] = ThemeEntry(
-        label="LangChain Dark",
+        label="Agent Dark",
         dark=True,
         colors=DARK_COLORS,
     )
     r["agent-light"] = ThemeEntry(
-        label="LangChain Light",
+        label="Agent Light",
         dark=False,
         colors=LIGHT_COLORS,
     )

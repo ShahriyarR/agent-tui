@@ -66,7 +66,6 @@ def web_search(  # noqa: ANN201  # Return type depends on dynamic tool configura
     5. NEVER show the raw JSON to the user - always provide a formatted response
     """
     try:
-        import requests
         from tavily import (
             BadRequestError,
             InvalidAPIKeyError,
@@ -77,7 +76,7 @@ def web_search(  # noqa: ANN201  # Return type depends on dynamic tool configura
     except ImportError as exc:
         return {
             "error": f"Required package not installed: {exc.name}. "
-            "Install with: pip install 'deepagents[cli]'",
+            "Install with: pip install 'agent-tui[cli]'",
             "query": query,
         }
 
@@ -97,7 +96,7 @@ def web_search(  # noqa: ANN201  # Return type depends on dynamic tool configura
             topic=topic,
         )
     except (
-        requests.exceptions.RequestException,
+        OSError,
         ValueError,
         TypeError,
         # Tavily-specific exceptions
@@ -137,20 +136,21 @@ def fetch_url(url: str, timeout: int = 30) -> dict[str, Any]:
     4. NEVER show the raw markdown to the user unless specifically requested
     """
     try:
-        import requests
+        import httpx
         from markdownify import markdownify
     except ImportError as exc:
         return {
             "error": f"Required package not installed: {exc.name}. "
-            "Install with: pip install 'deepagents[cli]'",
+            "Install with: pip install 'agent-tui[cli]'",
             "url": url,
         }
 
     try:
-        response = requests.get(
+        response = httpx.get(
             url,
             timeout=timeout,
-            headers={"User-Agent": "Mozilla/5.0 (compatible; DeepAgents/1.0)"},
+            headers={"User-Agent": "Mozilla/5.0 (compatible; AgentTUI/1.0)"},
+            follow_redirects=True,
         )
         response.raise_for_status()
 
@@ -163,5 +163,5 @@ def fetch_url(url: str, timeout: int = 30) -> dict[str, Any]:
             "status_code": response.status_code,
             "content_length": len(markdown_content),
         }
-    except requests.exceptions.RequestException as e:
+    except httpx.HTTPError as e:
         return {"error": f"Fetch URL error: {e!s}", "url": url}

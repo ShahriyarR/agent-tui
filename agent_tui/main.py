@@ -156,11 +156,11 @@ def cli_main() -> None:
         # Bootstrap config (triggers _ensure_bootstrap via settings access)
         from agent_tui.config import settings  # noqa: F401
 
-        from agent_tui.app import DeepAgentsApp
+        from agent_tui.app import AgentTuiApp
         from agent_tui.stub_agent import StubAgent
 
         agent = StubAgent()
-        app = DeepAgentsApp(agent=agent)
+        app = AgentTuiApp(agent=agent)
         app.run()
 
     except KeyboardInterrupt:

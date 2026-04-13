@@ -33,13 +33,13 @@ def _print_option_section(*lines: str, title: str = "Options") -> None:
 
 
 def show_help() -> None:
-    """Show top-level help information for the deepagents CLI."""
+    """Show top-level help information for the agent-tui CLI."""
     editable_path = _get_editable_install_path()
     install_type = f" (local: {escape(editable_path)})" if editable_path else ""
     banner_color = theme.PRIMARY_DEV if _is_editable_install() else theme.PRIMARY
     console.print()
     console.print(
-        f"[bold {banner_color}]deepagents-cli[/bold {banner_color}]"
+        f"[bold {banner_color}]agent-tui[/bold {banner_color}]"
         f" v{__version__}{install_type}"
     )
     console.print()
@@ -50,27 +50,27 @@ def show_help() -> None:
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
     console.print(
-        "  deepagents [OPTIONS]                           Start interactive thread"
+        "  agent-tui [OPTIONS]                           Start interactive thread"
     )
-    console.print("  deepagents agents <list|reset>                 Manage agents")
+    console.print("  agent-tui agents <list|reset>                 Manage agents")
     console.print(
-        "  deepagents skills <list|create|info|delete>    Manage agent skills"
-    )
-    console.print(
-        "  deepagents threads <list|delete>               Manage conversation threads"
+        "  agent-tui skills <list|create|info|delete>    Manage agent skills"
     )
     console.print(
-        "  deepagents update                              Check for and install updates"
+        "  agent-tui threads <list|delete>               Manage conversation threads"
+    )
+    console.print(
+        "  agent-tui update                              Check for and install updates"
     )
     console.print()
     console.print("[bold]Deploy (beta):[/bold]", style=theme.PRIMARY)
     console.print(
-        "  deepagents init [NAME]                  Scaffold a new deploy project"
+        "  agent-tui init [NAME]                  Scaffold a new deploy project"
     )
     console.print(
-        "  deepagents dev    --config deepagents.toml  Run a local dev server"
+        "  agent-tui dev    --config agent-tui.toml  Run a local dev server"
     )
-    console.print("  deepagents deploy --config deepagents.toml  Bundle and deploy")
+    console.print("  agent-tui deploy --config agent-tui.toml  Bundle and deploy")
     console.print()
 
     console.print("[bold]Options:[/bold]", style=theme.PRIMARY)
@@ -126,33 +126,33 @@ def show_help() -> None:
         "  --update                   Check for and install updates, then exit"
     )
     console.print("  --acp                      Run as an ACP server over stdio")
-    console.print("  -v, --version              Show deepagents CLI and SDK versions")
+    console.print("  -v, --version              Show agent-tui CLI and SDK versions")
     console.print("  -h, --help                 Show this help message and exit")
     console.print()
 
     console.print("[bold]Non-Interactive Mode:[/bold]", style=theme.PRIMARY)
     console.print(
-        "  deepagents -n 'Summarize README.md'     # Run task (no local shell access)",
+        "  agent-tui -n 'Summarize README.md'     # Run task (no local shell access)",
         style=theme.MUTED,
     )
     console.print(
-        "  deepagents -n 'List files' -S recommended  # Use safe commands",
+        "  agent-tui -n 'List files' -S recommended  # Use safe commands",
         style=theme.MUTED,
     )
     console.print(
-        "  deepagents -n 'Search logs' -S ls,cat,grep # Specify list",
+        "  agent-tui -n 'Search logs' -S ls,cat,grep # Specify list",
         style=theme.MUTED,
     )
     console.print(
-        "  deepagents -n 'Fix tests' -S all           # Any command",
+        "  agent-tui -n 'Fix tests' -S all           # Any command",
         style=theme.MUTED,
     )
     console.print(
-        "  cat prompt.txt | deepagents --stdin -q      # Explicit stdin",
+        "  cat prompt.txt | agent-tui --stdin -q      # Explicit stdin",
         style=theme.MUTED,
     )
     console.print(
-        "  deepagents --skill code-review -m 'review this patch'",
+        "  agent-tui --skill code-review -m 'review this patch'",
         style=theme.MUTED,
     )
     console.print()
@@ -165,7 +165,7 @@ def show_list_help() -> None:
     """
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents list [options]")
+    console.print("  agent-tui list [options]")
     console.print()
     console.print(
         "List all agents found in ~/.agent-tui/. Each agent has its own",
@@ -177,8 +177,8 @@ def show_list_help() -> None:
     _print_option_section()
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents list")
-    console.print("  deepagents list --json")
+    console.print("  agent-tui list")
+    console.print("  agent-tui list --json")
     console.print()
 
 
@@ -186,7 +186,7 @@ def show_agents_help() -> None:
     """Show help information for the `agents` subcommand."""
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents agents <command> [options]")
+    console.print("  agent-tui agents <command> [options]")
     console.print()
     console.print("[bold]Commands:[/bold]", style=theme.PRIMARY)
     console.print("  list|ls           List all agents")
@@ -195,9 +195,9 @@ def show_agents_help() -> None:
     _print_option_section()
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents agents list")
-    console.print("  deepagents agents reset --agent coder")
-    console.print("  deepagents agents reset --agent coder --target researcher")
+    console.print("  agent-tui agents list")
+    console.print("  agent-tui agents reset --agent coder")
+    console.print("  agent-tui agents reset --agent coder --target researcher")
     console.print()
 
 
@@ -205,7 +205,7 @@ def show_reset_help() -> None:
     """Show help information for the `reset` subcommand."""
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents reset --agent NAME [--target SRC]")
+    console.print("  agent-tui reset --agent NAME [--target SRC]")
     console.print()
     console.print(
         "Restore an agent's AGENTS.md to the built-in default, or copy",
@@ -224,9 +224,9 @@ def show_reset_help() -> None:
     )
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents reset --agent coder")
-    console.print("  deepagents reset --agent coder --target researcher")
-    console.print("  deepagents reset --agent coder --dry-run")
+    console.print("  agent-tui reset --agent coder")
+    console.print("  agent-tui reset --agent coder --target researcher")
+    console.print("  agent-tui reset --agent coder --dry-run")
     console.print()
 
 
@@ -238,7 +238,7 @@ def show_skills_help() -> None:
     """
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills <command> [options]")
+    console.print("  agent-tui skills <command> [options]")
     console.print()
     console.print("[bold]Commands:[/bold]", style=theme.PRIMARY)
     console.print("  list|ls           List all available skills")
@@ -253,14 +253,14 @@ def show_skills_help() -> None:
     )
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills list")
-    console.print("  deepagents skills list --project")
-    console.print("  deepagents skills create my-skill")
-    console.print("  deepagents skills create my-skill --agent myagent")
-    console.print("  deepagents skills info my-skill")
-    console.print("  deepagents skills delete my-skill")
-    console.print("  deepagents skills delete my-skill --force --project")
-    console.print("  deepagents skills delete -h")
+    console.print("  agent-tui skills list")
+    console.print("  agent-tui skills list --project")
+    console.print("  agent-tui skills create my-skill")
+    console.print("  agent-tui skills create my-skill --agent myagent")
+    console.print("  agent-tui skills info my-skill")
+    console.print("  agent-tui skills delete my-skill")
+    console.print("  agent-tui skills delete my-skill --force --project")
+    console.print("  agent-tui skills delete -h")
     console.print()
     console.print(
         "[bold]Skill directories (highest precedence first):[/bold]",
@@ -280,7 +280,7 @@ def show_skills_list_help() -> None:
     """Show help information for the `skills list` subcommand."""
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills list [options]")
+    console.print("  agent-tui skills list [options]")
     console.print()
     _print_option_section(
         "  --agent NAME            Agent identifier (default: agent)",
@@ -288,9 +288,9 @@ def show_skills_list_help() -> None:
     )
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills list")
-    console.print("  deepagents skills list --project")
-    console.print("  deepagents skills list --json")
+    console.print("  agent-tui skills list")
+    console.print("  agent-tui skills list --project")
+    console.print("  agent-tui skills list --json")
     console.print()
 
 
@@ -298,7 +298,7 @@ def show_skills_create_help() -> None:
     """Show help information for the `skills create` subcommand."""
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills create <name> [options]")
+    console.print("  agent-tui skills create <name> [options]")
     console.print()
     _print_option_section(
         "  --agent NAME            Agent identifier (default: agent)",
@@ -307,8 +307,8 @@ def show_skills_create_help() -> None:
     )
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills create web-research")
-    console.print("  deepagents skills create my-skill --project")
+    console.print("  agent-tui skills create web-research")
+    console.print("  agent-tui skills create my-skill --project")
     console.print()
 
 
@@ -316,7 +316,7 @@ def show_skills_info_help() -> None:
     """Show help information for the `skills info` subcommand."""
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills info <name> [options]")
+    console.print("  agent-tui skills info <name> [options]")
     console.print()
     _print_option_section(
         "  --agent NAME            Agent identifier (default: agent)",
@@ -324,8 +324,8 @@ def show_skills_info_help() -> None:
     )
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills info web-research")
-    console.print("  deepagents skills info my-skill --project")
+    console.print("  agent-tui skills info web-research")
+    console.print("  agent-tui skills info my-skill --project")
     console.print()
 
 
@@ -333,7 +333,7 @@ def show_skills_delete_help() -> None:
     """Show help information for the `skills delete` subcommand."""
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills delete <name> [options]")
+    console.print("  agent-tui skills delete <name> [options]")
     console.print()
     _print_option_section(
         "  --agent NAME            Agent identifier (default: agent)",
@@ -343,10 +343,10 @@ def show_skills_delete_help() -> None:
     )
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents skills delete old-skill")
-    console.print("  deepagents skills delete old-skill --force")
-    console.print("  deepagents skills delete old-skill --project")
-    console.print("  deepagents skills delete old-skill --dry-run")
+    console.print("  agent-tui skills delete old-skill")
+    console.print("  agent-tui skills delete old-skill --force")
+    console.print("  agent-tui skills delete old-skill --project")
+    console.print("  agent-tui skills delete old-skill --dry-run")
     console.print()
 
 
@@ -354,7 +354,7 @@ def show_update_help() -> None:
     """Show help information for the `update` subcommand."""
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents update [options]")
+    console.print("  agent-tui update [options]")
     console.print()
     console.print(
         "Check for and install CLI updates from PyPI.",
@@ -363,8 +363,8 @@ def show_update_help() -> None:
     _print_option_section()
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents update")
-    console.print("  deepagents update --json")
+    console.print("  agent-tui update")
+    console.print("  agent-tui update --json")
     console.print()
 
 
@@ -376,7 +376,7 @@ def show_threads_help() -> None:
     """
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents threads <command> [options]")
+    console.print("  agent-tui threads <command> [options]")
     console.print()
     console.print("[bold]Commands:[/bold]", style=theme.PRIMARY)
     console.print("  list|ls           List all threads")
@@ -385,10 +385,10 @@ def show_threads_help() -> None:
     _print_option_section()
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents threads list")
-    console.print("  deepagents threads list -n 10")
-    console.print("  deepagents threads list --agent mybot")
-    console.print("  deepagents threads delete abc123")
+    console.print("  agent-tui threads list")
+    console.print("  agent-tui threads list -n 10")
+    console.print("  agent-tui threads list --agent mybot")
+    console.print("  agent-tui threads delete abc123")
     console.print()
 
 
@@ -396,15 +396,15 @@ def show_threads_delete_help() -> None:
     """Show help information for the `threads delete` subcommand."""
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents threads delete <ID> [options]")
+    console.print("  agent-tui threads delete <ID> [options]")
     console.print()
     _print_option_section(
         "  --dry-run               Show what would happen without making changes",
     )
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents threads delete abc123")
-    console.print("  deepagents threads delete abc123 --dry-run")
+    console.print("  agent-tui threads delete abc123")
+    console.print("  agent-tui threads delete abc123 --dry-run")
     console.print()
 
 
@@ -412,7 +412,7 @@ def show_threads_list_help() -> None:
     """Show help information for the `threads list` subcommand."""
     console.print()
     console.print("[bold]Usage:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents threads list [options]")
+    console.print("  agent-tui threads list [options]")
     console.print()
     _print_option_section(
         "  --agent NAME              Filter by agent name",
@@ -425,10 +425,10 @@ def show_threads_list_help() -> None:
     )
     console.print()
     console.print("[bold]Examples:[/bold]", style=theme.PRIMARY)
-    console.print("  deepagents threads list")
-    console.print("  deepagents threads list -n 10")
-    console.print("  deepagents threads list --agent mybot")
-    console.print("  deepagents threads list --branch main -v")
-    console.print("  deepagents threads list --sort created --limit 50")
-    console.print("  deepagents threads list -r")
+    console.print("  agent-tui threads list")
+    console.print("  agent-tui threads list -n 10")
+    console.print("  agent-tui threads list --agent mybot")
+    console.print("  agent-tui threads list --branch main -v")
+    console.print("  agent-tui threads list --sort created --limit 50")
+    console.print("  agent-tui threads list -r")
     console.print()

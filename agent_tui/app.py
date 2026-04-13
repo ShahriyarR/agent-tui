@@ -1,4 +1,4 @@
-"""Textual UI application for deepagents-cli."""
+"""Textual UI application for agent-tui."""
 
 from __future__ import annotations
 
@@ -418,8 +418,8 @@ _COMMAND_URLS: dict[str, str] = {
 """Slash-command to URL mapping for commands that just open a browser."""
 
 
-class DeepAgentsApp(App):
-    """Main Textual application for deepagents-cli."""
+class AgentTuiApp(App):
+    """Main Textual application for agent-tui."""
 
     TITLE = "Deep Agents"
     """Textual application title."""
@@ -482,27 +482,6 @@ class DeepAgentsApp(App):
     """App-level keybindings for interrupt, quit, toggles, and approval menu
     navigation."""
 
-    class ServerReady(Message):
-        """Posted by the background server-startup worker on success."""
-
-        def __init__(  # noqa: D107
-            self,
-            agent: Any,  # noqa: ANN401
-            server_proc: Any,  # noqa: ANN401
-            mcp_server_info: list[Any] | None,
-        ) -> None:
-            super().__init__()
-            self.agent = agent
-            self.server_proc = server_proc
-            self.mcp_server_info = mcp_server_info
-
-    class ServerStartFailed(Message):
-        """Posted by the background server-startup worker on failure."""
-
-        def __init__(self, error: Exception) -> None:  # noqa: D107
-            super().__init__()
-            self.error = error
-
     def __init__(
         self,
         *,
@@ -543,10 +522,10 @@ class DeepAgentsApp(App):
 
         self._cwd = str(cwd) if cwd else str(Path.cwd())
 
-        self._lc_thread_id = thread_id
+        self._at_thread_id = thread_id
         """LangChain thread identifier.
 
-        Named `_lc_thread_id` to avoid collision with Textual's `App._thread_id`.
+        Named `_at_thread_id` to avoid collision with Textual's `App._thread_id`.
         """
 
         self._resume_thread_intent: str | None = None
@@ -724,7 +703,7 @@ class DeepAgentsApp(App):
         # VerticalScroll tracks user scroll intent for better auto-scroll behavior
         with VerticalScroll(id="chat"):
             yield WelcomeBanner(
-                thread_id=self._lc_thread_id,
+                thread_id=self._at_thread_id,
                 mcp_tool_count=self._mcp_tool_count,
                 connecting=self._connecting,
                 resuming=self._resume_thread_intent is not None,
@@ -897,17 +876,17 @@ class DeepAgentsApp(App):
         )
 
         # Auto-submit initial prompt or skill if provided via -m / --skill.
-        # This check must come first because _lc_thread_id and _agent are
+        # This check must come first because _at_thread_id and _agent are
         # always set (even for brand-new sessions), so an elif after the
         # thread-history branch would never execute.
-        # When connecting, defer until on_deep_agents_app_server_ready fires.
+        # When connecting, defer until on_agent_tui_app_server_ready fires.
         # NOTE: _schedule_initial_submission() has a side effect (queues a
         # task via call_after_refresh); short-circuit ensures it only runs
         # when not connecting — the deferred path handles the connecting case.
         if (
             not self._connecting
             and not self._schedule_initial_submission()
-            and self._lc_thread_id
+            and self._at_thread_id
             and self._agent
         ):
             self.call_after_refresh(
@@ -920,7 +899,7 @@ class DeepAgentsApp(App):
         def _create() -> TextualSessionState:
             return TextualSessionState(
                 auto_approve=self._auto_approve,
-                thread_id=self._lc_thread_id,
+                thread_id=self._at_thread_id,
             )
 
         try:
@@ -1064,7 +1043,7 @@ class DeepAgentsApp(App):
         """Resolve a `-r` resume intent into a concrete thread ID.
 
         Consumes `self._resume_thread_intent` and resolves it into a concrete
-        thread ID. Mutates `self._lc_thread_id` and optionally
+        thread ID. Mutates `self._at_thread_id` and optionally
         `self._assistant_id` / `self._server_kwargs`. Falls back to a fresh
         thread on any DB error.
         """
@@ -1100,16 +1079,16 @@ class DeepAgentsApp(App):
                         self._assistant_id = agent_name
                         if self._server_kwargs:
                             self._server_kwargs["assistant_id"] = agent_name
-                    self._lc_thread_id = thread_id
+                    self._at_thread_id = thread_id
                 else:
-                    self._lc_thread_id = generate_thread_id()
+                    self._at_thread_id = generate_thread_id()
                     if agent_filter:
                         msg = f"No previous threads for '{agent_filter}', starting new."
                     else:
                         msg = "No previous threads, starting new."
                     self.notify(msg, severity="warning", markup=False)
             elif await thread_exists(resume):
-                self._lc_thread_id = resume
+                self._at_thread_id = resume
                 if self._assistant_id == default_agent:
                     agent_name = await get_thread_agent(resume)
                     if agent_name:
@@ -1118,7 +1097,7 @@ class DeepAgentsApp(App):
                             self._server_kwargs["assistant_id"] = agent_name
             else:
                 # Thread not found — notify + fall back to new thread
-                self._lc_thread_id = generate_thread_id()
+                self._at_thread_id = generate_thread_id()
                 similar = await find_similar_threads(resume)
                 hint = f"Thread '{resume}' not found."
                 if similar:
@@ -1126,7 +1105,7 @@ class DeepAgentsApp(App):
                 self.notify(hint, severity="warning", timeout=6, markup=False)
         except Exception:
             logger.exception("Failed to resolve resume thread %r", resume)
-            self._lc_thread_id = generate_thread_id()
+            self._at_thread_id = generate_thread_id()
             self.notify(
                 "Could not look up thread history. Starting new session.",
                 severity="warning",
@@ -1135,81 +1114,11 @@ class DeepAgentsApp(App):
         # Update session state if ready (may still be initializing in a
         # concurrent worker)
         if self._session_state:
-            self._session_state.thread_id = self._lc_thread_id
+            self._session_state.thread_id = self._at_thread_id
 
     async def _start_server_background(self) -> None:
         """No-op: server lifecycle removed in scaffold extraction."""
         logger.debug("_start_server_background called but server lifecycle is removed")
-
-    def on_deep_agents_app_server_ready(self, event: ServerReady) -> None:
-        """Handle successful background server startup."""
-        self._connecting = False
-        self._agent = event.agent
-        self._server_proc = event.server_proc
-        self._mcp_server_info = event.mcp_server_info
-        self._mcp_tool_count = sum(len(s.tools) for s in (event.mcp_server_info or []))
-
-        # Update welcome banner to show ready state
-        try:
-            banner = self.query_one("#welcome-banner", WelcomeBanner)
-            banner.set_connected(self._mcp_tool_count)
-        except NoMatches:
-            logger.warning("Welcome banner not found during server ready transition")
-
-        # Handle deferred initial prompt, skill, or thread history
-        if not self._schedule_initial_submission() and (
-            self._lc_thread_id and self._agent
-        ):
-            self.call_after_refresh(
-                lambda: asyncio.create_task(self._load_thread_history())
-            )
-
-        # Drain deferred actions (e.g. model/thread switch queued during connection)
-        # if the agent is not actively running. Wrapped in a helper so that
-        # exceptions are logged rather than becoming unhandled task errors.
-        if self._deferred_actions and not self._agent_running:
-
-            async def _safe_drain() -> None:
-                try:
-                    await self._maybe_drain_deferred()
-                except Exception:
-                    logger.exception("Unhandled error while draining deferred actions")
-                    with suppress(Exception):
-                        await self._mount_message(
-                            ErrorMessage(
-                                "A deferred action failed during startup. "
-                                "You may need to retry the operation."
-                            )
-                        )
-
-            self.call_after_refresh(lambda: asyncio.create_task(_safe_drain()))
-
-        # Drain any messages the user typed while the server was starting.
-        # (If an initial submission exists, its cleanup path will drain the queue.)
-        if self._pending_messages and not self._has_initial_submission():
-            self.call_after_refresh(
-                lambda: asyncio.create_task(self._process_next_from_queue())
-            )
-
-    def on_deep_agents_app_server_start_failed(self, event: ServerStartFailed) -> None:
-        """Handle background server startup failure."""
-        self._connecting = False
-        self._server_startup_error = f"{type(event.error).__name__}: {event.error}"
-        logger.error("Server startup failed: %s", event.error, exc_info=event.error)
-        # Update banner to show persistent failure state
-        try:
-            banner = self.query_one("#welcome-banner", WelcomeBanner)
-            banner.set_failed(self._server_startup_error)
-        except NoMatches:
-            logger.warning("Welcome banner not found during server failure transition")
-
-        # Discard any messages queued while the server was starting
-        if self._pending_messages:
-            self._pending_messages.clear()
-            for w in self._queued_widgets:
-                w.remove()
-            self._queued_widgets.clear()
-        self._deferred_actions.clear()
 
     @staticmethod
     def _prewarm_deferred_imports() -> None:
@@ -2113,7 +2022,7 @@ class DeepAgentsApp(App):
 
         # If agent/shell is running or server is still starting up, enqueue
         # instead of processing. Messages queued during connection are drained
-        # once the server is ready (see on_deep_agents_app_server_ready).
+        # once the server is ready (see on_agent_tui_app_server_ready).
         if self._agent_running or self._shell_running or self._connecting:
             if mode == "command" and self._can_bypass_queue(value.lower().strip()):
                 await self._process_message(value, mode)
@@ -2514,13 +2423,13 @@ class DeepAgentsApp(App):
                     __version__ as cli_version,
                 )
 
-                cli_line = f"deepagents-cli version: {cli_version}"
+                cli_line = f"agent-tui version: {cli_version}"
             except ImportError:
                 logger.debug("agent_tui._version module not found")
-                cli_line = "deepagents-cli version: unknown"
+                cli_line = "agent-tui version: unknown"
             except Exception:
                 logger.warning("Unexpected error looking up CLI version", exc_info=True)
-                cli_line = "deepagents-cli version: unknown"
+                cli_line = "agent-tui version: unknown"
             try:
                 from importlib.metadata import (
                     PackageNotFoundError,
@@ -2528,13 +2437,13 @@ class DeepAgentsApp(App):
                 )
 
                 sdk_version = _pkg_version("deepagents")
-                sdk_line = f"deepagents (SDK) version: {sdk_version}"
+                sdk_line = f"agent-tui (SDK) version: {sdk_version}"
             except PackageNotFoundError:
-                logger.debug("deepagents SDK package not found in environment")
-                sdk_line = "deepagents (SDK) version: unknown"
+                logger.debug("agent-tui SDK package not found in environment")
+                sdk_line = "agent-tui (SDK) version: unknown"
             except Exception:
                 logger.warning("Unexpected error looking up SDK version", exc_info=True)
-                sdk_line = "deepagents (SDK) version: unknown"
+                sdk_line = "agent-tui (SDK) version: unknown"
             await self._mount_message(AppMessage(f"{cli_line}\n{sdk_line}"))
         elif cmd == "/clear":
             self._pending_messages.clear()
@@ -3001,7 +2910,7 @@ class DeepAgentsApp(App):
         self._inflight_turn_stats = SessionStats()
         self._inflight_turn_start = time.monotonic()
         try:
-            await self._adapter.run_task(message, thread_id=self._lc_thread_id)
+            await self._adapter.run_task(message, thread_id=self._at_thread_id)
         finally:
             if self._inflight_turn_stats is not None:
                 self._session_stats.merge(self._inflight_turn_stats)
@@ -3204,7 +3113,7 @@ class DeepAgentsApp(App):
             preloaded_payload: Optional pre-fetched history payload for the
                 thread.
         """
-        history_thread_id = thread_id or self._lc_thread_id
+        history_thread_id = thread_id or self._at_thread_id
         if not history_thread_id:
             logger.debug("Skipping history load: no thread ID available")
             return
@@ -3701,7 +3610,7 @@ class DeepAgentsApp(App):
             payload = json.dumps(
                 {
                     "event": "session.end",
-                    "thread_id": getattr(self, "_lc_thread_id", ""),
+                    "thread_id": getattr(self, "_at_thread_id", ""),
                 }
             ).encode()
             _dispatch_hook_sync("session.end", payload, hooks)
@@ -4211,7 +4120,7 @@ class DeepAgentsApp(App):
             return
 
         # Save previous state for rollback on failure
-        prev_thread_id = self._lc_thread_id
+        prev_thread_id = self._at_thread_id
         prev_session_thread = self._session_state.thread_id
         self._thread_switching = True
         if self._chat_input:
@@ -4233,7 +4142,7 @@ class DeepAgentsApp(App):
 
             # Switch to the selected thread
             self._session_state.thread_id = thread_id
-            self._lc_thread_id = thread_id
+            self._at_thread_id = thread_id
 
             self._update_welcome_banner(
                 thread_id,
@@ -4259,7 +4168,7 @@ class DeepAgentsApp(App):
             logger.exception("Failed to switch to thread %s", thread_id)
             # Restore previous thread IDs so the user can retry
             self._session_state.thread_id = prev_session_thread
-            self._lc_thread_id = prev_thread_id
+            self._at_thread_id = prev_thread_id
             self._update_welcome_banner(
                 prev_session_thread,
                 missing_message=(
@@ -4651,7 +4560,7 @@ async def run_textual_app(
     Returns:
         An `AppResult` with the return code and final thread ID.
     """
-    app = DeepAgentsApp(
+    app = AgentTuiApp(
         agent=agent,
         auto_approve=auto_approve,
         cwd=cwd,
@@ -4664,7 +4573,7 @@ async def run_textual_app(
 
     return AppResult(
         return_code=app.return_code or 0,
-        thread_id=app._lc_thread_id,
+        thread_id=app._at_thread_id,
         session_stats=app._session_stats,
         update_available=app._update_available,
     )

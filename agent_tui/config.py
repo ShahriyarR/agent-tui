@@ -355,7 +355,7 @@ def _resolve_editable_info() -> tuple[bool, str | None]:
 
 
 def _is_editable_install() -> bool:
-    """Check if deepagents-cli is installed in editable mode.
+    """Check if agent-tui is installed in editable mode.
 
     Uses PEP 610 `direct_url.json` metadata to detect editable installs.
 
@@ -694,7 +694,7 @@ def _parse_extra_skills_dirs(
 
 @dataclass
 class Settings:
-    """Global settings and environment detection for deepagents-cli.
+    """Global settings and environment detection for agent-tui.
 
     This class is initialized once at startup and provides access to:
     - Available models and API keys
@@ -964,7 +964,7 @@ class Settings:
         return self.tavily_api_key is not None
 
     @property
-    def user_deepagents_dir(self) -> Path:
+    def user_agent_tui_dir(self) -> Path:
         """Get the base user-level .agent-tui directory.
 
         Returns:
@@ -1113,7 +1113,7 @@ class Settings:
         """Get user-level agents directory path for custom subagent definitions.
 
         Args:
-            agent_name: Name of the CLI agent (e.g., "deepagents")
+            agent_name: Name of the CLI agent (e.g., "agent-tui")
 
         Returns:
             Path to ~/.agent-tui/{agent_name}/agents/
