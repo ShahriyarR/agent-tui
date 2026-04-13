@@ -14,51 +14,17 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
     import aiosqlite
-    from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
-    from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
     from agent_tui.output import OutputFormat
 
 logger = logging.getLogger(__name__)
 
-_aiosqlite_patched = False
-_jsonplus_serializer: JsonPlusSerializer | None = None
 _message_count_cache: dict[str, tuple[str | None, int]] = {}
 _MAX_MESSAGE_COUNT_CACHE = 4096
 _initial_prompt_cache: dict[str, tuple[str | None, str | None]] = {}
 _MAX_INITIAL_PROMPT_CACHE = 4096
 _recent_threads_cache: dict[tuple[str | None, int], list[ThreadInfo]] = {}
 _MAX_RECENT_THREADS_CACHE_KEYS = 16
-
-
-def _patch_aiosqlite() -> None:
-    """Patch aiosqlite.Connection with `is_alive()` if missing.
-
-    Required by langgraph-checkpoint>=2.1.0.
-    See: https://github.com/langchain-ai/langgraph/issues/6583
-    """
-    global _aiosqlite_patched  # noqa: PLW0603  # Module-level flag requires global statement
-    if _aiosqlite_patched:
-        return
-
-    import aiosqlite as _aiosqlite
-
-    if not hasattr(_aiosqlite.Connection, "is_alive"):
-
-        def _is_alive(self: _aiosqlite.Connection) -> bool:
-            """Check if the connection is still alive.
-
-            Returns:
-                True if connection is alive, False otherwise.
-            """
-            return bool(self._running and self._connection is not None)
-
-        # Dynamically adding a method to aiosqlite.Connection at runtime.
-        # Type checkers can't understand this monkey-patch, so we suppress the
-        # "attr-defined" error that would otherwise be raised.
-        _aiosqlite.Connection.is_alive = _is_alive  # type: ignore[attr-defined]
-
-    _aiosqlite_patched = True
 
 
 @asynccontextmanager
@@ -72,8 +38,6 @@ async def _connect() -> AsyncIterator[aiosqlite.Connection]:
         An open aiosqlite connection to the sessions database.
     """
     import aiosqlite as _aiosqlite
-
-    _patch_aiosqlite()
 
     async with _aiosqlite.connect(str(get_db_path()), timeout=30.0) as conn:
         yield conn
@@ -539,26 +503,6 @@ async def _populate_message_counts(
     )
 
 
-async def _get_jsonplus_serializer() -> JsonPlusSerializer:
-    """Return a cached JsonPlus serializer, loading it off the UI loop."""
-    global _jsonplus_serializer  # noqa: PLW0603  # Module-level cache requires global statement
-    if _jsonplus_serializer is not None:
-        return _jsonplus_serializer
-
-    loop = asyncio.get_running_loop()
-    _jsonplus_serializer = await loop.run_in_executor(None, _create_jsonplus_serializer)
-    return _jsonplus_serializer
-
-
-def _create_jsonplus_serializer() -> JsonPlusSerializer:
-    """Import and create a JsonPlus serializer.
-
-    Returns:
-        A ready `JsonPlusSerializer` instance.
-    """
-    from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
-
-    return JsonPlusSerializer()
 
 
 def _cache_message_count(thread_id: str, freshness: str | None, count: int) -> None:
@@ -612,41 +556,29 @@ def _copy_threads(threads: list[ThreadInfo]) -> list[ThreadInfo]:
 async def _count_messages_from_checkpoint(
     conn: aiosqlite.Connection,
     thread_id: str,
-    serde: JsonPlusSerializer,
 ) -> int:
     """Count messages from the most recent checkpoint blob.
-
-    With `durability='exit'`, messages are stored in the checkpoint blob, not in
-    the writes table. This function deserializes the checkpoint and counts the
-    messages in channel_values.
-
-    Args:
-        conn: Database connection.
-        thread_id: The thread ID to count messages for.
-        serde: Serializer for decoding checkpoint data.
 
     Returns:
         Number of messages in the checkpoint, or 0 if not found.
     """
-    return (await _load_latest_checkpoint_summary(conn, thread_id, serde)).message_count
+    return (await _load_latest_checkpoint_summary(conn, thread_id)).message_count
 
 
 async def _extract_initial_prompt(
     conn: aiosqlite.Connection,
     thread_id: str,
-    serde: JsonPlusSerializer,
 ) -> str | None:
     """Extract the first human message from the latest checkpoint.
 
     Args:
         conn: Database connection.
         thread_id: The thread ID to extract from.
-        serde: Serializer for decoding checkpoint data.
 
     Returns:
         First human message content, or None if not found.
     """
-    summary = await _load_latest_checkpoint_summary(conn, thread_id, serde)
+    summary = await _load_latest_checkpoint_summary(conn, thread_id)
     return summary.initial_prompt
 
 
@@ -676,8 +608,6 @@ async def _populate_checkpoint_fields(
     include_initial_prompt: bool,
 ) -> None:
     """Populate checkpoint-derived thread fields with a batched latest-row pass."""
-    serde = await _get_jsonplus_serializer()
-
     # Phase 1: apply cache hits, collect threads that need DB fetch.
     uncached: list[ThreadInfo] = []
     for thread in threads:
@@ -709,7 +639,7 @@ async def _populate_checkpoint_fields(
     # Phase 2: batch-fetch all uncached threads.
     uncached_ids = [t["thread_id"] for t in uncached]
     batch_results = await _load_latest_checkpoint_summaries_batch(
-        conn, uncached_ids, serde
+        conn, uncached_ids
     )
 
     # Phase 3: apply results and update caches.
@@ -739,7 +669,6 @@ exceed that limit. We chunk to this size to stay safe.
 async def _load_latest_checkpoint_summaries_batch(
     conn: aiosqlite.Connection,
     thread_ids: list[str],
-    serde: JsonPlusSerializer,
 ) -> dict[str, _CheckpointSummary]:
     """Batch-load the latest checkpoint summary for multiple threads.
 
@@ -749,7 +678,6 @@ async def _load_latest_checkpoint_summaries_batch(
     Args:
         conn: Database connection.
         thread_ids: Thread IDs to look up.
-        serde: Serializer for decoding checkpoint blobs.
 
     Returns:
         Dict mapping thread IDs to their checkpoint summaries.
@@ -775,16 +703,13 @@ async def _load_latest_checkpoint_summaries_batch(
         async with conn.execute(query, chunk) as cursor:
             rows = await cursor.fetchall()
 
-        loop = asyncio.get_running_loop()
         for row in rows:
             tid, type_str, checkpoint_blob = row
             if not type_str or not checkpoint_blob:
                 results[tid] = _CheckpointSummary(message_count=0, initial_prompt=None)
                 continue
             try:
-                data = await loop.run_in_executor(
-                    None, serde.loads_typed, (type_str, checkpoint_blob)
-                )
+                data = _loads_checkpoint(type_str, checkpoint_blob)
                 results[tid] = _summarize_checkpoint(data)
             except Exception:
                 logger.warning(
@@ -801,7 +726,6 @@ async def _load_latest_checkpoint_summaries_batch(
 async def _load_latest_checkpoint_summary(
     conn: aiosqlite.Connection,
     thread_id: str,
-    serde: JsonPlusSerializer,
 ) -> _CheckpointSummary:
     """Load checkpoint-derived summary data from the latest checkpoint row.
 
@@ -822,7 +746,7 @@ async def _load_latest_checkpoint_summary(
 
         type_str, checkpoint_blob = row
         try:
-            data = serde.loads_typed((type_str, checkpoint_blob))
+            data = _loads_checkpoint(type_str, checkpoint_blob)
         except (ValueError, TypeError, KeyError, AttributeError):
             logger.warning(
                 "Failed to deserialize checkpoint for thread %s; "
@@ -833,6 +757,32 @@ async def _load_latest_checkpoint_summary(
             return _CheckpointSummary(message_count=0, initial_prompt=None)
 
     return _summarize_checkpoint(data)
+
+
+def _loads_checkpoint(type_str: str, blob: bytes | str) -> object:
+    """Attempt to deserialize a checkpoint blob using JSON.
+
+    Falls back to returning an empty dict on parse failure so callers
+    gracefully receive a zero-message summary rather than raising.
+
+    Args:
+        type_str: Serialization type tag from the checkpoints table.
+        blob: Raw checkpoint bytes or string from the database.
+
+    Returns:
+        Deserialized checkpoint object, or empty dict on failure.
+    """
+    import json as _json
+
+    try:
+        raw = blob if isinstance(blob, bytes) else blob.encode()
+        return _json.loads(raw)
+    except (ValueError, TypeError, UnicodeDecodeError):
+        logger.debug(
+            "Could not deserialize checkpoint (type=%s); returning empty summary",
+            type_str,
+        )
+        return {}
 
 
 def _summarize_checkpoint(data: object) -> _CheckpointSummary:
@@ -1014,21 +964,6 @@ async def delete_thread(thread_id: str) -> bool:
                 filtered = [row for row in rows if row["thread_id"] != thread_id]
                 _recent_threads_cache[key] = filtered
         return deleted
-
-
-@asynccontextmanager
-async def get_checkpointer() -> AsyncIterator[AsyncSqliteSaver]:
-    """Get AsyncSqliteSaver for the global database.
-
-    Yields:
-        AsyncSqliteSaver instance for checkpoint persistence.
-    """
-    from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-
-    _patch_aiosqlite()
-
-    async with AsyncSqliteSaver.from_conn_string(str(get_db_path())) as checkpointer:
-        yield checkpointer
 
 
 _DEFAULT_THREAD_LIMIT = 20
