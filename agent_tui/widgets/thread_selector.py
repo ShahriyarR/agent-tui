@@ -686,12 +686,20 @@ class ThreadSelectorScreen(ModalScreen[str | None]):
         self._filter_controls: list[Input | Checkbox] | None = None
         self._cell_text: dict[tuple[str, str], str] = {}
 
-        from agent_tui.model_config import load_thread_config
-
-        cfg = load_thread_config()
-        self._columns = dict(cfg.columns)
-        self._relative_time = cfg.relative_time
-        self._sort_by_updated = cfg.sort_order == "updated_at"
+        # Stub: load_thread_config removed (model_config not available).
+        # Defaults: show thread_id and updated_at; sort by updated_at; absolute time.
+        self._columns: dict[str, bool] = {
+            "thread_id": True,
+            "agent_name": False,
+            "messages": False,
+            "created_at": False,
+            "updated_at": True,
+            "git_branch": False,
+            "cwd": False,
+            "initial_prompt": False,
+        }
+        self._relative_time: bool = False
+        self._sort_by_updated: bool = True
 
         # Cached threads are pre-sorted by updated_at DESC (the only sort
         # order the cache stores).  Skip the O(n log n) re-sort when that
@@ -1012,12 +1020,9 @@ class ThreadSelectorScreen(ModalScreen[str | None]):
                 return
             self._relative_time = event.value
 
-            from agent_tui.model_config import save_thread_relative_time
-
-            self.run_worker(
-                asyncio.to_thread(save_thread_relative_time, event.value),
-                group="thread-selector-save",
-            )
+            # Stub: save_thread_relative_time not available (no config backend).
+            # Preference is held in memory only for this session.
+            _ = event.value  # suppress unused-variable lint
             self._schedule_list_rebuild()
             return
 
@@ -1034,13 +1039,8 @@ class ThreadSelectorScreen(ModalScreen[str | None]):
         if event.value and column_key in {"messages", "initial_prompt"}:
             self._schedule_checkpoint_enrichment()
 
-        from agent_tui.model_config import save_thread_columns
-
-        snapshot = dict(self._columns)
-        self.run_worker(
-            asyncio.to_thread(save_thread_columns, snapshot),
-            group="thread-selector-save",
-        )
+        # Stub: save_thread_columns not available (no config backend).
+        # Column visibility is held in memory only for this session.
         self._schedule_list_rebuild()
 
     def _update_filtered_list(self) -> None:
@@ -1786,16 +1786,12 @@ class ThreadSelectorScreen(ModalScreen[str | None]):
         )
 
     def _persist_sort_order(self, order: str) -> None:
-        """Save sort-order preference to config, notifying on failure."""
+        """Save sort-order preference to config, notifying on failure.
 
-        async def _save() -> None:
-            from agent_tui.model_config import save_thread_sort_order
-
-            ok = await asyncio.to_thread(save_thread_sort_order, order)
-            if not ok:
-                self.app.notify("Could not save sort preference", severity="warning")
-
-        self.run_worker(_save(), group="thread-selector-save")
+        Stub: save_thread_sort_order not available (no config backend).
+        Sort order is held in memory only for this session.
+        """
+        _ = order  # suppress unused-variable lint
 
     def action_delete_thread(self) -> None:
         """Show delete confirmation for the highlighted thread."""

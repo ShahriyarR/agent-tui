@@ -1,4 +1,4 @@
-"""Status bar widget for deepagents-cli."""
+"""Status bar widget for agent-tui."""
 
 from __future__ import annotations
 

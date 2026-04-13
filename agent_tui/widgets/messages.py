@@ -1,4 +1,4 @@
-"""Message widgets for deepagents-cli."""
+"""Message widgets for agent-tui."""
 
 from __future__ import annotations
 

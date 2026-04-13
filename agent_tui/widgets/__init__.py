@@ -1,4 +1,4 @@
-"""Textual widgets for deepagents-cli.
+"""Textual widgets for agent-tui.
 
 Import directly from submodules, e.g.:
 

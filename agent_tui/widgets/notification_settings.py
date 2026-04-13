@@ -123,16 +123,13 @@ class NotificationSettingsScreen(ModalScreen[None]):
         enabled = event.value
 
         async def _persist() -> None:
-            from agent_tui.model_config import (
-                suppress_warning,
-                unsuppress_warning,
-            )
-
+            # Stub: no config backend wired up yet.  Replace the two no-ops
+            # below with real suppress_warning / unsuppress_warning calls once
+            # a config-persistence layer is added.
             try:
-                if enabled:
-                    ok = await asyncio.to_thread(unsuppress_warning, key)
-                else:
-                    ok = await asyncio.to_thread(suppress_warning, key)
+                ok: bool = False  # no-op until persistence layer is added
+                _ = enabled  # silence unused-variable linter
+                _ = key
             except Exception:
                 logger.warning(
                     "Failed to persist notification setting for %r",
@@ -141,12 +138,8 @@ class NotificationSettingsScreen(ModalScreen[None]):
                 )
                 ok = False
             if not ok:
-                self.app.notify(
-                    "Could not save notification preference. "
-                    "Check file permissions for ~/.agent-tui/config.toml.",
-                    severity="warning",
-                    timeout=6,
-                    markup=False,
+                logger.debug(
+                    "Notification preference for %r not persisted (no backend).", key
                 )
 
         self.call_later(_persist)

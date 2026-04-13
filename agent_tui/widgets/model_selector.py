@@ -24,17 +24,57 @@ if TYPE_CHECKING:
 
 from agent_tui import theme
 from agent_tui.config import Glyphs, get_glyphs, is_ascii_mode
-from agent_tui.model_config import (
-    ModelConfig,
-    ModelProfileEntry,
-    clear_default_model,
-    get_available_models,
-    get_model_profiles,
-    has_provider_credentials,
-    save_default_model,
-)
+from agent_tui._session_stats import format_token_count
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Stub types and functions — replaced when a real model-config backend is
+# connected.  Widgets operate on plain dicts so no agent SDK is required.
+# ---------------------------------------------------------------------------
+
+if TYPE_CHECKING:
+    from typing import TypedDict
+
+    class _ModelProfile(TypedDict, total=False):
+        max_input_tokens: int
+        max_output_tokens: int
+        text_inputs: bool
+        image_inputs: bool
+        audio_inputs: bool
+        pdf_inputs: bool
+        video_inputs: bool
+        reasoning_output: bool
+        tool_calling: bool
+        structured_output: bool
+        status: str
+
+    class ModelProfileEntry(TypedDict):
+        profile: _ModelProfile | None
+        overridden_keys: set[str]
+else:
+    # Runtime placeholder so isinstance checks and dict access work.
+    ModelProfileEntry = dict  # type: ignore[misc,assignment]
+
+
+def _stub_get_available_models() -> dict[str, list[str]]:
+    """Return an empty model list; replaced by a real backend at integration time."""
+    return {}
+
+
+def _stub_has_provider_credentials(provider: str) -> bool | None:  # noqa: ARG001
+    """Return None (unknown) for all providers; replaced at integration time."""
+    return None
+
+
+def _stub_save_default_model(model_spec: str) -> bool:  # noqa: ARG001
+    """No-op save; replaced at integration time."""
+    return False
+
+
+def _stub_clear_default_model() -> bool:
+    """No-op clear; replaced at integration time."""
+    return False
 
 
 class ModelOption(Static):
@@ -301,7 +341,7 @@ class ModelSelectorScreen(ModalScreen[tuple[str, str] | None]):
 
     @staticmethod
     def _load_model_data(
-        cli_override: dict[str, Any] | None,
+        cli_override: dict[str, Any] | None,  # noqa: ARG004
     ) -> tuple[
         list[tuple[str, str]],
         str | None,
@@ -310,23 +350,25 @@ class ModelSelectorScreen(ModalScreen[tuple[str, str] | None]):
         """Gather model discovery data synchronously.
 
         Intended to be called via `asyncio.to_thread` so filesystem I/O in
-        `get_available_models` does not block the event loop.
+        model discovery does not block the event loop.
 
         Returns:
             Tuple of (all_models, default_spec, profiles) where
                 `all_models` is a list of `(provider:model spec, provider)`
                 pairs, `default_spec` is the configured default model or
                 `None`, and `profiles` maps spec strings to profile entries.
+
+        Note:
+            Returns empty data in the scaffold. Wire up a real model-config
+            backend by replacing ``_stub_get_available_models`` and the other
+            ``_stub_*`` helpers at the module level.
         """
         all_models: list[tuple[str, str]] = [
             (f"{provider}:{model}", provider)
-            for provider, models in get_available_models().items()
+            for provider, models in _stub_get_available_models().items()
             for model in models
         ]
-
-        config = ModelConfig.load()
-        profiles = get_model_profiles(cli_override=cli_override)
-        return all_models, config.default_model, profiles
+        return all_models, None, {}
 
     async def on_mount(self) -> None:
         """Set up the screen on mount.
@@ -501,7 +543,7 @@ class ModelSelectorScreen(ModalScreen[tuple[str, str] | None]):
 
         # Resolve credentials upfront so the widget-building loop
         # stays focused on layout
-        creds = {p: has_provider_credentials(p) for p in by_provider}
+        creds = {p: _stub_has_provider_credentials(p) for p in by_provider}
 
         # Collect all widgets first, then batch-mount once to avoid
         # individual DOM mutations per widget
@@ -635,8 +677,6 @@ class ModelSelectorScreen(ModalScreen[tuple[str, str] | None]):
         Returns:
             Styled `Content` for the 4-line footer.
         """
-        from agent_tui.textual_adapter import format_token_count
-
         if profile_entry is None or not profile_entry["profile"]:
             return Content.styled("Model profile not available :(\n\n\n", "dim")
 
@@ -916,7 +956,7 @@ class ModelSelectorScreen(ModalScreen[tuple[str, str] | None]):
 
         if model_spec == self._default_spec:
             # Already default — clear it
-            if await asyncio.to_thread(clear_default_model):
+            if await asyncio.to_thread(_stub_clear_default_model):
                 self._default_spec = None
                 self.call_after_refresh(self._update_display)
                 help_widget.update(Content.styled("Default cleared", "bold"))
@@ -929,7 +969,7 @@ class ModelSelectorScreen(ModalScreen[tuple[str, str] | None]):
                     )
                 )
                 self.set_timer(3.0, self._restore_help_text)
-        elif await asyncio.to_thread(save_default_model, model_spec):
+        elif await asyncio.to_thread(_stub_save_default_model, model_spec):
             self._default_spec = model_spec
             self.call_after_refresh(self._update_display)
             help_widget.update(
