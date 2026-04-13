@@ -12,12 +12,21 @@ import subprocess  # noqa: S404
 import sys
 import tempfile
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from langchain_core.messages.content import VideoContentBlock
+from typing import TypedDict
 
 logger = logging.getLogger(__name__)
+
+
+class _VideoContentBlock(TypedDict, total=False):
+    type: str
+    source_type: str
+    data: str
+    media_type: str
+
+
+def _create_video_block(data: str, media_type: str) -> dict:
+    """Create a video content block dict from base64 data and media type."""
+    return {"type": "video", "source_type": "base64", "data": data, "media_type": media_type}
 
 IMAGE_EXTENSIONS: frozenset[str] = frozenset(
     {
@@ -90,17 +99,15 @@ class VideoData:
     format: str  # "mp4", "quicktime", etc.
     placeholder: str  # Display text like "[video 1]"
 
-    def to_message_content(self) -> "VideoContentBlock":
-        """Convert to LangChain `VideoContentBlock` format.
+    def to_message_content(self) -> dict:
+        """Convert to video content block format.
 
         Returns:
-            `VideoContentBlock` with base64 data and mime_type.
+            Dict with type, source_type, data, and media_type for multimodal messages.
         """
-        from langchain_core.messages.content import create_video_block
-
-        return create_video_block(
-            base64=self.base64_data,
-            mime_type=f"video/{self.format}",
+        return _create_video_block(
+            data=self.base64_data,
+            media_type=f"video/{self.format}",
         )
 
 

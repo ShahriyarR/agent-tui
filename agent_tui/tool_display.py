@@ -14,6 +14,8 @@ from typing import Any
 from agent_tui.config import MAX_ARG_LENGTH, get_glyphs
 from agent_tui.unicode_security import strip_dangerous_unicode
 
+DEFAULT_EXECUTE_TIMEOUT = 120  # seconds — default timeout for tool execution
+
 _HIDDEN_CHAR_MARKER = " [hidden chars removed]"
 """Marker appended to display values that had dangerous Unicode stripped, so
 users know the value was modified for safety."""
@@ -177,8 +179,6 @@ def format_tool_display(tool_name: str, tool_args: dict) -> str:
         if "command" in tool_args:
             command = _sanitize_display_value(tool_args["command"], max_length=120)
             timeout = _coerce_timeout_seconds(tool_args.get("timeout"))
-            from deepagents.backends import DEFAULT_EXECUTE_TIMEOUT
-
             if timeout is not None and timeout != DEFAULT_EXECUTE_TIMEOUT:
                 timeout_str = _format_timeout(timeout)
                 return f'{prefix} {tool_name}("{command}", timeout={timeout_str})'

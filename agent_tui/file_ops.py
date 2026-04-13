@@ -11,7 +11,40 @@ from typing import TYPE_CHECKING, Any, Literal
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from deepagents.backends.protocol import BackendProtocol
+    pass
+
+
+def _perform_string_replacement(
+    content: str,
+    old_string: str,
+    new_string: str,
+    replace_all: bool = False,  # noqa: FBT001, FBT002
+) -> tuple[str, int] | str:
+    """Perform string replacement with occurrence validation.
+
+    Args:
+        content: Original content
+        old_string: String to replace
+        new_string: Replacement string
+        replace_all: Whether to replace all occurrences
+
+    Returns:
+        Tuple of (new_content, occurrences) on success, or error message string
+    """
+    occurrences = content.count(old_string)
+
+    if occurrences == 0:
+        return f"Error: String not found in file: '{old_string}'"
+
+    if occurrences > 1 and not replace_all:
+        return (
+            f"Error: String '{old_string}' appears {occurrences} times in file. "
+            "Use replace_all=True to replace all instances, or provide a more specific "
+            "string with surrounding context."
+        )
+
+    new_content = content.replace(old_string, new_string)
+    return new_content, occurrences
 
 FileOpStatus = Literal["pending", "success", "error"]
 
@@ -227,9 +260,8 @@ def build_approval_preview(
         old_string = str(args.get("old_string", ""))
         new_string = str(args.get("new_string", ""))
         replace_all = bool(args.get("replace_all"))
-        from deepagents.backends.utils import perform_string_replacement
 
-        replacement = perform_string_replacement(
+        replacement = _perform_string_replacement(
             before, old_string, new_string, replace_all
         )
         if isinstance(replacement, str):
@@ -274,7 +306,7 @@ class FileOpTracker:
     """Collect file operation metrics during a CLI interaction."""
 
     def __init__(
-        self, *, assistant_id: str | None, backend: BackendProtocol | None = None
+        self, *, assistant_id: str | None, backend: Any | None = None
     ) -> None:
         """Initialize the tracker."""
         self.assistant_id = assistant_id
