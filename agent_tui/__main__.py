@@ -1,6 +1,5 @@
-"""Allow running the CLI as: python -m deepagents.cli."""
+"""Allow running the CLI as: python -m agent_tui."""
 
 from agent_tui.main import cli_main
 
-if __name__ == "__main__":
-    cli_main()
+cli_main()
