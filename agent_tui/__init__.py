@@ -1,10 +1,10 @@
-"""Deep Agents CLI - Interactive AI coding assistant."""
+"""Agent TUI - Terminal UI for agent interaction."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from deepagents_cli._version import __version__
+from agent_tui._version import __version__
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -29,7 +29,7 @@ def __getattr__(name: str) -> Callable[[], None]:
         AttributeError: If *name* is not a lazily-provided attribute.
     """
     if name == "cli_main":
-        from deepagents_cli.main import cli_main
+        from agent_tui.main import cli_main
 
         return cli_main
     msg = f"module {__name__!r} has no attribute {name!r}"
