@@ -67,7 +67,7 @@ logger = logging.getLogger(__name__)
 _monotonic = time.monotonic
 
 from agent_tui.domain.protocol import AgentProtocol
-from agent_tui.adapter import AgentAdapter
+from agent_tui.services.adapter import AgentAdapter
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -80,7 +80,7 @@ if TYPE_CHECKING:
 
     from agent_tui.domain.ask_user_types import AskUserWidgetResult, Question
     from agent_tui.domain.mcp_tools import MCPServerInfo
-    from agent_tui.skills.load import ExtendedSkillMetadata
+    from agent_tui.services.skills.load import ExtendedSkillMetadata
     from agent_tui.widgets.approval import ApprovalMenu
     from agent_tui.widgets.ask_user import AskUserMenu
 
@@ -377,7 +377,7 @@ def _new_thread_id() -> str:
     Returns:
         UUID7 string.
     """
-    from agent_tui.sessions import generate_thread_id
+    from agent_tui.services.sessions import generate_thread_id
 
     return generate_thread_id()
 
@@ -671,7 +671,7 @@ class AgentTuiApp(App):
 
         # Lazily imported here to avoid pulling image dependencies into
         # argument parsing paths.
-        from agent_tui.input import MediaTracker
+        from agent_tui.services.input import MediaTracker
 
         self._image_tracker = MediaTracker()
 
@@ -839,7 +839,7 @@ class AgentTuiApp(App):
 
         # Background update check and what's-new banner
         # (opt-out via env var or config.toml [update].check)
-        from agent_tui.update_check import is_update_check_enabled
+        from agent_tui.services.update_check import is_update_check_enabled
 
         if is_update_check_enabled():
             self.run_worker(
@@ -894,7 +894,7 @@ class AgentTuiApp(App):
             )
 
     async def _init_session_state(self) -> None:
-        """Create session state in a thread (imports agent_tui.sessions)."""
+        """Create session state in a thread (imports agent_tui.services.sessions)."""
 
         def _create() -> TextualSessionState:
             return TextualSessionState(
@@ -1034,7 +1034,7 @@ class AgentTuiApp(App):
         Returns:
             Tuple of `(skill metadata list, pre-resolved containment roots)`.
         """
-        from agent_tui.skills.invocation import discover_skills_and_roots
+        from agent_tui.services.skills.invocation import discover_skills_and_roots
 
         assistant_id = self._assistant_id or "agent"
         return discover_skills_and_roots(assistant_id)
@@ -1047,7 +1047,7 @@ class AgentTuiApp(App):
         `self._assistant_id` / `self._server_kwargs`. Falls back to a fresh
         thread on any DB error.
         """
-        from agent_tui.sessions import (
+        from agent_tui.services.sessions import (
             find_similar_threads,
             generate_thread_id,
             get_most_recent,
@@ -1132,14 +1132,14 @@ class AgentTuiApp(App):
         # we let the exception propagate (the worker catches it and logs
         # at WARNING). textual_adapter and update_check are included so
         # _post_paint_init's inline imports are dict lookups.
-        from agent_tui.clipboard import (
+        from agent_tui.services.clipboard import (
             copy_selection_to_clipboard,  # noqa: F401
         )
         from agent_tui.domain.command_registry import ALWAYS_IMMEDIATE  # noqa: F401
         from agent_tui.configurator.settings import settings  # noqa: F401
-        from agent_tui.hooks import dispatch_hook  # noqa: F401
+        from agent_tui.services.hooks import dispatch_hook  # noqa: F401
         from agent_tui.configurator.model_config import ModelSpec  # noqa: F401
-        from agent_tui.update_check import is_update_check_enabled  # noqa: F401
+        from agent_tui.services.update_check import is_update_check_enabled  # noqa: F401
 
         # Markdown rendering stack — ~170 ms cold (textual._markdown pulls in
         # markdown_it, pygments, linkify_it — 438 modules).  Hit on first
@@ -1169,7 +1169,7 @@ class AgentTuiApp(App):
 
     async def _prewarm_threads_cache(self) -> None:  # noqa: PLR6301  # Worker hook kept as instance method
         """Prewarm thread selector cache without blocking app startup."""
-        from agent_tui.sessions import (
+        from agent_tui.services.sessions import (
             get_thread_limit,
             prewarm_thread_message_counts,
         )
@@ -1195,7 +1195,7 @@ class AgentTuiApp(App):
         """Check PyPI for a newer version and optionally auto-update."""
         # Phase 1: version check (benign failure)
         try:
-            from agent_tui.update_check import (
+            from agent_tui.services.update_check import (
                 is_auto_update_enabled,
                 is_update_available,
                 upgrade_command,
@@ -1215,7 +1215,7 @@ class AgentTuiApp(App):
             from agent_tui.configurator.version import __version__ as cli_version
 
             if is_auto_update_enabled():
-                from agent_tui.update_check import perform_upgrade
+                from agent_tui.services.update_check import perform_upgrade
 
                 self.notify(
                     f"Updating to v{latest}...",
@@ -1258,7 +1258,7 @@ class AgentTuiApp(App):
     async def _show_whats_new(self) -> None:
         """Show a 'what's new' banner on the first launch after an upgrade."""
         try:
-            from agent_tui.update_check import should_show_whats_new
+            from agent_tui.services.update_check import should_show_whats_new
 
             if not await asyncio.to_thread(should_show_whats_new):
                 return
@@ -1284,7 +1284,7 @@ class AgentTuiApp(App):
 
         try:
             from agent_tui.configurator.version import __version__ as cli_version
-            from agent_tui.update_check import mark_version_seen
+            from agent_tui.services.update_check import mark_version_seen
 
             await asyncio.to_thread(mark_version_seen, cli_version)
         except Exception:
@@ -1294,7 +1294,7 @@ class AgentTuiApp(App):
         """Handle the `/update` slash command — check for and install updates."""
         await self._mount_message(UserMessage("/update"))
         try:
-            from agent_tui.update_check import (
+            from agent_tui.services.update_check import (
                 is_update_available,
                 perform_upgrade,
                 upgrade_command,
@@ -1338,7 +1338,7 @@ class AgentTuiApp(App):
         """Handle the `/auto-update` slash command — persist toggle immediately."""
         try:
             from agent_tui.configurator.console import _is_editable_install
-            from agent_tui.update_check import (
+            from agent_tui.services.update_check import (
                 is_auto_update_enabled,
                 set_auto_update,
             )
@@ -2000,7 +2000,7 @@ class AgentTuiApp(App):
         # Reset quit pending state on any input
         self._quit_pending = False
 
-        from agent_tui.hooks import dispatch_hook
+        from agent_tui.services.hooks import dispatch_hook
 
         await dispatch_hook("user.prompt", {})
 
@@ -2682,8 +2682,8 @@ class AgentTuiApp(App):
             args: Optional user request to append after the skill body.
             command: Original slash command text for UI echo, if any.
         """
-        from agent_tui.skills.invocation import build_skill_invocation_envelope
-        from agent_tui.skills.load import load_skill_content
+        from agent_tui.services.skills.invocation import build_skill_invocation_envelope
+        from agent_tui.services.skills.load import load_skill_content
 
         normalized_name = skill_name.strip().lower()
 
@@ -3605,7 +3605,7 @@ class AgentTuiApp(App):
 
         # Dispatch synchronously — the event loop is about to be torn down by
         # super().exit(), so an async task would never complete.
-        from agent_tui.hooks import _dispatch_hook_sync, _load_hooks
+        from agent_tui.services.hooks import _dispatch_hook_sync, _load_hooks
 
         hooks = _load_hooks()
         if hooks:
@@ -3720,7 +3720,7 @@ class AgentTuiApp(App):
 
     async def action_open_editor(self) -> None:
         """Open the current prompt text in an external editor ($VISUAL/$EDITOR)."""
-        from agent_tui.editor import open_in_editor
+        from agent_tui.services.editor import open_in_editor
 
         chat_input = self._chat_input
         if not chat_input or not chat_input._text_area:
@@ -3789,7 +3789,7 @@ class AgentTuiApp(App):
 
     def on_mouse_up(self, event: MouseUp) -> None:  # noqa: ARG002  # Textual event handler signature
         """Copy selection to clipboard on mouse release."""
-        from agent_tui.clipboard import copy_selection_to_clipboard
+        from agent_tui.services.clipboard import copy_selection_to_clipboard
 
         copy_selection_to_clipboard(self)
 
@@ -4011,8 +4011,8 @@ class AgentTuiApp(App):
         """Show interactive thread selector as a modal screen."""
         from functools import partial
 
-        from agent_tui.sessions import get_cached_threads, get_thread_limit
-        from agent_tui.sessions import ThreadInfo
+        from agent_tui.services.sessions import get_cached_threads, get_thread_limit
+        from agent_tui.services.sessions import ThreadInfo
         from agent_tui.widgets.thread_selector import ThreadSelectorScreen
 
         current = self._session_state.thread_id if self._session_state else None

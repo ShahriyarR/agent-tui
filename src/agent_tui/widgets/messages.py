@@ -22,8 +22,8 @@ from agent_tui.configurator import theme
 from agent_tui.configurator.glyphs import get_glyphs, is_ascii_mode
 from agent_tui.configurator.settings import MODE_DISPLAY_GLYPHS, PREFIX_TO_MODE
 from agent_tui.common.formatting import format_duration
-from agent_tui.input import EMAIL_PREFIX_PATTERN, INPUT_HIGHLIGHT_PATTERN
-from agent_tui.tool_display import format_tool_display
+from agent_tui.services.input import EMAIL_PREFIX_PATTERN, INPUT_HIGHLIGHT_PATTERN
+from agent_tui.services.tool_display import format_tool_display
 from agent_tui.widgets._links import open_style_link
 from agent_tui.widgets.diff import compose_diff_lines
 

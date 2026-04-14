@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from agent_tui.adapter import AgentAdapter
+from agent_tui.services.adapter import AgentAdapter
 from agent_tui.domain.protocol import AgentEvent, EventType
-from agent_tui.stub_agent import StubAgent
+from agent_tui.services.stub_agent import StubAgent
 
 
 @pytest.fixture

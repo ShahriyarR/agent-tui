@@ -909,7 +909,7 @@ class SessionState:
         self.no_splash = no_splash
         self.exit_hint_until: float | None = None
         self.exit_hint_handle = None
-        from agent_tui.sessions import generate_thread_id
+        from agent_tui.services.sessions import generate_thread_id
 
         self.thread_id = generate_thread_id()
 

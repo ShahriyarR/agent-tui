@@ -8,12 +8,12 @@ Public API:
 - build_skill_invocation_envelope: Build prompt envelope for a skill
 """
 
-from agent_tui.skills.invocation import (
+from agent_tui.services.skills.invocation import (
     SkillInvocationEnvelope,
     build_skill_invocation_envelope,
     discover_skills_and_roots,
 )
-from agent_tui.skills.load import ExtendedSkillMetadata, list_skills, load_skill_content
+from agent_tui.services.skills.load import ExtendedSkillMetadata, list_skills, load_skill_content
 
 __all__ = [
     "ExtendedSkillMetadata",

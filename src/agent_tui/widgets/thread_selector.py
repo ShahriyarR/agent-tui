@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from textual.app import ComposeResult
     from textual.events import Click, Key
 
-    from agent_tui.sessions import ThreadInfo
+    from agent_tui.services.sessions import ThreadInfo
 
 from agent_tui.configurator import theme
 from agent_tui.configurator.glyphs import get_glyphs, is_ascii_mode
@@ -125,7 +125,7 @@ def _get_format_fns() -> _FormatFns:
     global _format_fns_cache  # noqa: PLW0603
     if _format_fns_cache is not None:
         return _format_fns_cache
-    from agent_tui.sessions import (
+    from agent_tui.services.sessions import (
         format_path,
         format_relative_timestamp,
         format_timestamp,
@@ -786,7 +786,7 @@ class ThreadSelectorScreen(ModalScreen[str | None]):
         """Return the resolved thread limit for display purposes."""
         if self._thread_limit is not None:
             return self._thread_limit
-        from agent_tui.sessions import get_thread_limit
+        from agent_tui.services.sessions import get_thread_limit
 
         return get_thread_limit()
 
@@ -1276,7 +1276,7 @@ class ThreadSelectorScreen(ModalScreen[str | None]):
         Returns:
             Tuple indicating whether message counts and prompts were requested.
         """
-        from agent_tui.sessions import populate_thread_checkpoint_details
+        from agent_tui.services.sessions import populate_thread_checkpoint_details
 
         load_counts, load_prompts = self._pending_checkpoint_fields()
         if not load_counts and not load_prompts:
@@ -1322,7 +1322,7 @@ class ThreadSelectorScreen(ModalScreen[str | None]):
 
     async def _load_threads(self) -> None:
         """Load thread rows first, then kick off background enrichment."""
-        from agent_tui.sessions import (
+        from agent_tui.services.sessions import (
             apply_cached_thread_initial_prompts,
             apply_cached_thread_message_counts,
             list_threads,
@@ -1333,7 +1333,7 @@ class ThreadSelectorScreen(ModalScreen[str | None]):
         try:
             limit = self._thread_limit
             if limit is None:
-                from agent_tui.sessions import get_thread_limit
+                from agent_tui.services.sessions import get_thread_limit
 
                 limit = get_thread_limit()
             sort_by = "updated" if self._sort_by_updated else "created"
@@ -1836,7 +1836,7 @@ class ThreadSelectorScreen(ModalScreen[str | None]):
         Args:
             thread_id: Thread ID to delete.
         """
-        from agent_tui.sessions import delete_thread
+        from agent_tui.services.sessions import delete_thread
 
         preferred_thread_id: str | None = None
         if self._selected_index + 1 < len(self._filtered_threads):

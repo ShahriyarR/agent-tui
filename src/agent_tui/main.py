@@ -157,7 +157,7 @@ def cli_main() -> None:
         from agent_tui.configurator.settings import settings  # noqa: F401
 
         from agent_tui.app import AgentTuiApp
-        from agent_tui.stub_agent import StubAgent
+        from agent_tui.services.stub_agent import StubAgent
 
         agent = StubAgent()
         app = AgentTuiApp(agent=agent)

@@ -5,7 +5,7 @@ import asyncio
 import pytest
 
 from agent_tui.domain.protocol import AgentEvent, EventType
-from agent_tui.stub_agent import StubAgent
+from agent_tui.services.stub_agent import StubAgent
 
 
 @pytest.fixture

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from agent_tui.skills.load import ExtendedSkillMetadata
+    from agent_tui.services.skills.load import ExtendedSkillMetadata
 
 
 @dataclass(frozen=True)
@@ -37,7 +37,7 @@ def discover_skills_and_roots(
         Tuple of ``(skill metadata list, pre-resolved containment roots)``.
     """
     from agent_tui.configurator.settings import settings
-    from agent_tui.skills.load import list_skills
+    from agent_tui.services.skills.load import list_skills
 
     skills = list_skills(
         built_in_skills_dir=settings.get_built_in_skills_dir(),

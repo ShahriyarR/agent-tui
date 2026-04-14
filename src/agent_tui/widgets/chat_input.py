@@ -22,7 +22,7 @@ from agent_tui.configurator import theme
 from agent_tui.domain.command_registry import SLASH_COMMANDS
 from agent_tui.configurator.glyphs import is_ascii_mode
 from agent_tui.configurator.settings import MODE_DISPLAY_GLYPHS, MODE_PREFIXES, PREFIX_TO_MODE
-from agent_tui.input import IMAGE_PLACEHOLDER_PATTERN, VIDEO_PLACEHOLDER_PATTERN
+from agent_tui.services.input import IMAGE_PLACEHOLDER_PATTERN, VIDEO_PLACEHOLDER_PATTERN
 from agent_tui.widgets.autocomplete import (
     CompletionResult,
     FuzzyFileController,
@@ -68,7 +68,7 @@ if TYPE_CHECKING:
     from textual.events import Click
     from textual.timer import Timer
 
-    from agent_tui.input import MediaTracker, ParsedPastedPathPayload
+    from agent_tui.services.input import MediaTracker, ParsedPastedPathPayload
 
 
 class CompletionOption(Static):
@@ -514,7 +514,7 @@ class ChatTextArea(TextArea):
         if not payload:
             return
 
-        from agent_tui.input import parse_pasted_path_payload
+        from agent_tui.services.input import parse_pasted_path_payload
 
         try:
             parsed = await asyncio.to_thread(parse_pasted_path_payload, payload)
@@ -750,7 +750,7 @@ class ChatTextArea(TextArea):
         if self._paste_burst_buffer:
             await self._flush_paste_burst()
 
-        from agent_tui.input import parse_pasted_path_payload
+        from agent_tui.services.input import parse_pasted_path_payload
 
         try:
             parsed = await asyncio.to_thread(parse_pasted_path_payload, event.text)
@@ -1105,7 +1105,7 @@ class ChatInput(Vertical):
         Returns:
             Parsed payload details, otherwise `None`.
         """
-        from agent_tui.input import parse_pasted_path_payload
+        from agent_tui.services.input import parse_pasted_path_payload
 
         return parse_pasted_path_payload(text, allow_leading_path=allow_leading_path)
 
@@ -1157,7 +1157,7 @@ class ChatInput(Vertical):
             Tuple of `(candidate_text, leading_match)`, where `leading_match` is
             `(path, token_end)` when extraction succeeds, otherwise `None`.
         """
-        from agent_tui.input import extract_leading_pasted_file_path
+        from agent_tui.services.input import extract_leading_pasted_file_path
 
         leading_match = extract_leading_pasted_file_path(text)
         candidate = text
@@ -1184,7 +1184,7 @@ class ChatInput(Vertical):
         """Return whether text is a dropped-path payload for existing files."""
         if len(text) < 2:  # noqa: PLR2004  # Need at least '/' + one char
             return False
-        from agent_tui.input import parse_pasted_path_payload
+        from agent_tui.services.input import parse_pasted_path_payload
 
         return parse_pasted_path_payload(text, allow_leading_path=True) is not None
 
@@ -1473,7 +1473,7 @@ class ChatInput(Vertical):
         if not self._image_tracker:
             return raw_text, False
 
-        from agent_tui.media_utils import (
+        from agent_tui.services.media_utils import (
             IMAGE_EXTENSIONS,
             MAX_MEDIA_BYTES,
             VIDEO_EXTENSIONS,
