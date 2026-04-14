@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
     import aiosqlite
 
-    from agent_tui.output import OutputFormat
+    from agent_tui.common.output import OutputFormat
 
 logger = logging.getLogger(__name__)
 
@@ -1056,7 +1056,7 @@ async def list_threads_command(
         )
 
     if output_format == "json":
-        from agent_tui.output import write_json
+        from agent_tui.common.output import write_json
 
         write_json("threads list", list(threads))
         return
@@ -1154,7 +1154,7 @@ async def delete_thread_command(
     if dry_run:
         exists = await thread_exists(thread_id)
         if output_format == "json":
-            from agent_tui.output import write_json
+            from agent_tui.common.output import write_json
 
             write_json(
                 "threads delete",
@@ -1177,7 +1177,7 @@ async def delete_thread_command(
     deleted = await delete_thread(thread_id)
 
     if output_format == "json":
-        from agent_tui.output import write_json
+        from agent_tui.common.output import write_json
 
         write_json("threads delete", {"thread_id": thread_id, "deleted": deleted})
         return

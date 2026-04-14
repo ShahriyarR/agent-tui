@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 from agent_tui.configurator import theme
 from agent_tui.configurator.glyphs import get_glyphs, is_ascii_mode
 from agent_tui.configurator.settings import SHELL_TOOL_NAMES
-from agent_tui.unicode_security import (
+from agent_tui.common.unicode_security import (
     check_url_safety,
     detect_dangerous_unicode,
     format_warning_detail,

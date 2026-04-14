@@ -10,7 +10,7 @@ from textual.content import Content
 from textual.widgets import Static
 
 from agent_tui.configurator.glyphs import get_glyphs
-from agent_tui.formatting import format_duration
+from agent_tui.common.formatting import format_duration
 
 if TYPE_CHECKING:
     from textual.app import ComposeResult
