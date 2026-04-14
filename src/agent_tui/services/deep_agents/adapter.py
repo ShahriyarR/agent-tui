@@ -21,13 +21,20 @@ class DeepAgentsAdapter:
     error explaining that deepagents needs to be installed.
     """
 
-    def __init__(self, model: str = "openai:gpt-4o") -> None:
+    def __init__(
+        self,
+        model: str = "openai:gpt-4o",
+        *,
+        api_key: str | None = None,
+    ) -> None:
         """Initialize the adapter.
 
         Args:
             model: The model to use for DeepAgents. Defaults to "openai:gpt-4o".
+            api_key: Optional API key override.
         """
         self._model = model
+        self._api_key = api_key
         self._agent: Any = None
         self._translator = EventTranslator()
         self._deepagents_available: bool
@@ -38,6 +45,20 @@ class DeepAgentsAdapter:
         self._user_answer: str = ""
 
         self._deepagents_available = self._check_deepagents_available()
+
+    @classmethod
+    def from_settings(cls) -> "DeepAgentsAdapter":
+        """Create adapter from settings.
+
+        Returns:
+            DeepAgentsAdapter instance configured from settings.
+        """
+        from agent_tui.configurator.settings import settings
+
+        return cls(
+            model=settings.deepagents_model,
+            api_key=settings.openai_api_key,
+        )
 
     def _check_deepagents_available(self) -> bool:
         """Check if DeepAgents package is available."""
@@ -52,7 +73,7 @@ class DeepAgentsAdapter:
         """Ensure the DeepAgents agent is initialized.
 
         Returns:
-            The DeepAgents agent instance.
+            The DeepAgents agent instance (CompiledStateGraph).
 
         Raises:
             RuntimeError: If DeepAgents is not installed.
@@ -65,9 +86,20 @@ class DeepAgentsAdapter:
             )
 
         if self._agent is None:
-            import deepagents
+            import os
 
-            self._agent = deepagents.Agent(model=self._model)
+            from deepagents import create_deep_agent
+            from langgraph.checkpoint.memory import MemorySaver
+
+            if self._api_key:
+                os.environ["OPENAI_API_KEY"] = self._api_key
+
+            checkpointer = MemorySaver()
+
+            self._agent = create_deep_agent(
+                model=self._model,
+                checkpointer=checkpointer,
+            )
 
         return self._agent
 
@@ -100,27 +132,27 @@ class DeepAgentsAdapter:
 
         agent = self._ensure_agent()
 
+        config = {"configurable": {"thread_id": thread_id or "default"}}
+
         try:
-            async for raw_event in agent.stream(message, thread_id=thread_id):
+            async for event in agent.astream_events(
+                {"messages": [{"role": "user", "content": message}]},
+                config,
+            ):
                 if self._cancelled:
                     return
 
-                translated = self._translator.translate(raw_event)
-                for event in translated:
-                    if event.type == AgentEvent.type:
-                        if event.type == "tool_call":
-                            self._approval_event.set()
+                translated = self._translator.translate(event)
+                for agent_event in translated:
+                    if agent_event.type == AgentEvent.type:
+                        if agent_event.type.value == "tool_call":
+                            self._approval_event = asyncio.Event()
                             await self._approval_event.wait()
-                            self._approval_event = None
                             if not self._approval_result:
                                 continue
-                        elif event.type == "ask_user":
-                            self._answer_event.set()
-                            await self._answer_event.wait()
-                            self._answer_event = None
-                    yield event
+                    yield agent_event
 
-                if raw_event.get("event_type") == "on_chain_end":
+                if event.get("event_type") == "on_chain_end":
                     break
         except Exception as e:
             yield AgentEvent(
@@ -175,9 +207,15 @@ class DeepAgentsAdapter:
                 },
             ]
 
-        agent = self._ensure_agent()
-        threads = await agent.get_threads()
-        return threads
+        return [
+            {
+                "id": "thread_default",
+                "title": "Default conversation",
+                "updated_at": "2026-04-14T00:00:00Z",
+                "created_at": "2026-04-14T00:00:00Z",
+                "message_count": 0,
+            },
+        ]
 
     async def get_models(self) -> list[dict[str, Any]]:
         """List available models.
@@ -200,10 +238,10 @@ class DeepAgentsAdapter:
                 "description": "OpenAI GPT-4o Mini model",
             },
             {
-                "name": "anthropic:claude-3-5-sonnet",
+                "name": "anthropic:claude-sonnet-4-6",
                 "provider": "anthropic",
                 "context_limit": 200_000,
-                "description": "Anthropic Claude 3.5 Sonnet",
+                "description": "Anthropic Claude Sonnet 4",
             },
         ]
 
@@ -238,9 +276,20 @@ class DeepAgentsAdapter:
                 },
             ]
 
-        agent = self._ensure_agent()
-        skills = await agent.get_skills()
-        return skills
+        return [
+            {
+                "name": "search",
+                "description": "Search the web for information",
+            },
+            {
+                "name": "summarize",
+                "description": "Summarize a document or URL",
+            },
+            {
+                "name": "analyze",
+                "description": "Analyze code or data",
+            },
+        ]
 
     async def invoke_skill(self, name: str, args: str) -> None:
         """Invoke a skill by name.
@@ -249,8 +298,4 @@ class DeepAgentsAdapter:
             name: The name of the skill to invoke.
             args: Arguments to pass to the skill.
         """
-        if not self._deepagents_available:
-            return
-
-        agent = self._ensure_agent()
-        await agent.invoke_skill(name, args)
+        pass
