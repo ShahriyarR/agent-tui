@@ -19,6 +19,11 @@ class EventType(StrEnum):
     TOKEN_UPDATE = "token_update"
     STATUS_UPDATE = "status_update"
     ERROR = "error"
+    PLAN_STEP = "plan_step"
+    SUBAGENT_START = "subagent_start"
+    SUBAGENT_END = "subagent_end"
+    CONTEXT_SUMMARIZED = "context_summarized"
+    INTERRUPT = "interrupt"
 
 
 @dataclass
@@ -47,6 +52,14 @@ class AgentEvent:
     # STATUS_UPDATE
     status_text: str = ""
 
+    # PLAN_STEP
+    plan_step_text: str = ""
+    plan_total_steps: int = 0
+    plan_current_step: int = 0
+
+    # SUBAGENT_START, SUBAGENT_END
+    subagent_name: str = ""
+
     # Extensible payload
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -55,9 +68,7 @@ class AgentEvent:
 class AgentProtocol(Protocol):
     """The contract a backend must implement for the TUI to drive it."""
 
-    async def stream(
-        self, message: str, *, thread_id: str | None = None
-    ) -> AsyncIterator[AgentEvent]:
+    async def stream(self, message: str, *, thread_id: str | None = None) -> AsyncIterator[AgentEvent]:
         """Send a user message, receive a stream of events."""
         ...
 

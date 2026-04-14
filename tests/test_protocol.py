@@ -12,6 +12,11 @@ def test_event_type_values():
     assert EventType.TOKEN_UPDATE == "token_update"
     assert EventType.STATUS_UPDATE == "status_update"
     assert EventType.ERROR == "error"
+    assert EventType.PLAN_STEP == "plan_step"
+    assert EventType.SUBAGENT_START == "subagent_start"
+    assert EventType.SUBAGENT_END == "subagent_end"
+    assert EventType.CONTEXT_SUMMARIZED == "context_summarized"
+    assert EventType.INTERRUPT == "interrupt"
 
 
 def test_agent_event_defaults():
@@ -25,6 +30,10 @@ def test_agent_event_defaults():
     assert event.token_count == 0
     assert event.context_limit == 0
     assert event.status_text == ""
+    assert event.plan_step_text == ""
+    assert event.plan_total_steps == 0
+    assert event.plan_current_step == 0
+    assert event.subagent_name == ""
     assert event.metadata == {}
 
 
@@ -57,4 +66,46 @@ def test_agent_event_metadata_isolation():
 def test_agent_protocol_is_protocol():
     """AgentProtocol should be usable as a typing.Protocol."""
     import typing
+
     assert issubclass(type(AgentProtocol), type(typing.Protocol))
+
+
+def test_agent_event_plan_step():
+    event = AgentEvent(
+        type=EventType.PLAN_STEP,
+        plan_step_text="Decomposing task into steps",
+        plan_total_steps=5,
+        plan_current_step=1,
+    )
+    assert event.type == EventType.PLAN_STEP
+    assert event.plan_step_text == "Decomposing task into steps"
+    assert event.plan_total_steps == 5
+    assert event.plan_current_step == 1
+
+
+def test_agent_event_subagent_start():
+    event = AgentEvent(
+        type=EventType.SUBAGENT_START,
+        subagent_name="code_writer",
+    )
+    assert event.type == EventType.SUBAGENT_START
+    assert event.subagent_name == "code_writer"
+
+
+def test_agent_event_subagent_end():
+    event = AgentEvent(
+        type=EventType.SUBAGENT_END,
+        subagent_name="code_writer",
+    )
+    assert event.type == EventType.SUBAGENT_END
+    assert event.subagent_name == "code_writer"
+
+
+def test_agent_event_context_summarized():
+    event = AgentEvent(type=EventType.CONTEXT_SUMMARIZED)
+    assert event.type == EventType.CONTEXT_SUMMARIZED
+
+
+def test_agent_event_interrupt():
+    event = AgentEvent(type=EventType.INTERRUPT)
+    assert event.type == EventType.INTERRUPT
