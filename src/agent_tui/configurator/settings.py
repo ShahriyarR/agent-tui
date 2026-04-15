@@ -668,7 +668,7 @@ class Settings:
         Can be overridden via DEEPAGENTS_MODEL environment variable.
         Format: provider:model (e.g., 'openai:gpt-4o', 'anthropic:claude-sonnet-4-6')
         """
-        return os.environ.get("DEEPAGENTS_MODEL", "openai:gpt-4o")
+        return os.environ.get("DEEPAGENTS_MODEL", "openai:gpt-4o-mini")
 
     @property
     def user_agent_tui_dir(self) -> Path:
