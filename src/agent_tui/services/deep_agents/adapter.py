@@ -23,7 +23,7 @@ class DeepAgentsAdapter:
 
     def __init__(
         self,
-        model: str = "openai:o3",
+        model: str = "openai:gpt-5.2",
         *,
         api_key: str | None = None,
     ) -> None:
