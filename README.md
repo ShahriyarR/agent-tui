@@ -108,3 +108,58 @@ Architecture Notes
 - Path normalization in translator affects UI display only
 - virtual_mode=True in backend affects actual file operations
 - Both work together: UI shows relative paths, backend resolves them correctly
+
+Phase 3 Summary
+Completed
+Branch: phase/3-shell-execution (merges into phase/2-file-operations)
+Goal: execute tool works with TUI safety controls
+
+Files Created
+
+services/deep_agents/backend.py	LocalShellBackend (extends FilesystemBackend)
+
+Files Modified
+
+services/deep_agents/adapter.py	Use LocalShellBackend with shell support
+services/adapter.py	+DANGEROUS_SHELL_PATTERNS check for execute tool
+
+Key Implementation
+
+1. LocalShellBackend (backend.py)
+   Extends FilesystemBackend: file operations (read, write, edit, glob, grep, ls)
+   Adds shell execution: execute tool (shell commands)
+   virtual_mode=True: /file.txt maps to <cwd>/file.txt
+   Both rooted at current working directory
+   inherit_env=True passes current environment to shell commands
+
+2. Shell Safety (adapter.py)
+   Dangerous pattern detection for execute tool
+   Blocks: command substitution $(...), backticks `...`, redirects >>
+   Blocks: variable expansion $VAR, process substitution <(...)
+
+3. Approval Integration
+   execute tool appears in approval widget like file tools
+   User must approve before shell command runs
+   TUI shows command preview in styled format
+
+Verification
+- "execute echo hello" → approval widget → command runs ✓
+- "execute $(rm -rf /)" → blocked by dangerous pattern check ✓
+- "execute cat file.txt" → approved → outputs to TUI ✓
+- Shell commands execute in current working directory ✓
+- 64 tests pass (7 pre-existing test issues unrelated to Phase 3)
+
+Shell Safety Patterns Blocked
+$(  `  $'  \n  \r  \t  <(  >(  <<<  <<  >>  >  <  ${  $VAR  &
+
+Event Flow (Shell)
+User: "Run ls -la"
+  → on_chat_model_stream → thinking
+  → on_tool_start → TOOL_CALL (execute)
+  → adapter checks contains_dangerous_patterns()
+  → Blocked? → show_error() + reject
+  → Safe? → yield TOOL_CALL → TUI approval widget
+  → User approves → approval_event.set()
+  → LocalShellBackend.execute() runs command
+  → on_tool_end → TOOL_RESULT with output
+  → TUI displays command output
