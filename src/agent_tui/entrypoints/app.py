@@ -4240,7 +4240,8 @@ class AgentTuiApp(App):
         self.call_later(self._mount_message, AppMessage(f"✅ Subagent finished: {subagent_name}"))
 
     def show_context_summarized(self, token_count: int) -> None:
-        self.call_later(self._mount_message, AppMessage(f"📝 Context summarized (≈{token_count:,} tokens)"))
+        self._update_status(f"Context compacted (≈{token_count:,} tokens)")
+        self._on_tokens_update(token_count)
 
     def pause_for_human_input(self) -> None:
         """Pause UI for human input during interrupt.
