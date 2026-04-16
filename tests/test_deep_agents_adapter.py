@@ -65,7 +65,7 @@ class MockDeepAgents:
 
 
 @pytest.fixture
-def mock_deepagents_module(MockDeepAgents):
+def mock_deepagents_module():
     """Fixture to mock the deepagents module."""
     return MockDeepAgents()
 

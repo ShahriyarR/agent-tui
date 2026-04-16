@@ -51,3 +51,60 @@ Key Fixes Applied
 1. __init__.py lazy loading — was blocking runtime imports
 2. DeepAgentsAdapter.from_settings() — was missing class method
 3. create_deep_agent() — was incorrectly using deepagents.Agent
+
+Phase 2 Summary
+Completed
+Branch: phase/2-file-operations (merges into phase/1-foundation)
+Goal: File tools (read, write, edit) flow through TUI approval system
+
+Files Modified
+
+services/deep_agents/event_translator.py	+on_chat_model_stream handler, +path normalization
+docs/superpowers/specs/2026-04-14-deepagents-integration-architecture.md	+filesystem backend spec
+
+Key Technical Fixes
+
+1. Event Key Mismatch (event_translator.py)
+   LangGraph uses "event" key, not "event_type"
+   
+2. Tool Name Location (event_translator.py)
+   Tool name is at top level in LangGraph events, not in data dict
+   
+3. Message Chunk Handler (event_translator.py)
+   Added _handle_chat_model_stream for DeepAgents message streaming
+   
+4. Approval Flow Fix (adapter.py)
+   Yield TOOL_CALL event FIRST, then wait for approval (prevents deadlock)
+   
+5. Comparison Fix (adapter.py)
+   Fixed: agent_event.type == EventType.TOOL_CALL
+   Was: agent_event.type == AgentEvent.type (always False)
+   
+6. TOOL_RESULT Metadata (event_translator.py)
+   Added tool_name and tool_id to tool result events for widget display
+   
+7. Filesystem Backend (adapter.py)
+   Added FilesystemBackend with virtual_mode=True
+   /test.txt resolves to <cwd>/test.txt instead of system root
+   
+8. Path Normalization (event_translator.py)
+   Converts /test.txt to test.txt for UI display (user-friendly paths)
+
+Verification
+- "Read README.md" → approval widget appears ✓
+- Approve → file content displays ✓
+- "Create test.txt" → writes to current directory ✓
+- All file operations resolve against cwd, not system root ✓
+- 44 tests pass
+
+Event Flow
+User message → on_chat_model_stream → MESSAGE_CHUNK (thinking)
+  → on_tool_start → TOOL_CALL event → Yield event
+  → TUI shows ApprovalMenu → User approves → approval_event.set()
+  → Stream resumes → Tool executes → on_tool_end
+  → TOOL_RESULT event → TUI shows ToolCallMessage with output
+
+Architecture Notes
+- Path normalization in translator affects UI display only
+- virtual_mode=True in backend affects actual file operations
+- Both work together: UI shows relative paths, backend resolves them correctly

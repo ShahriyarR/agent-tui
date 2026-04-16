@@ -3,11 +3,43 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator
+from pathlib import Path
 from typing import Any
 
-from agent_tui.domain.protocol import AgentEvent
+from agent_tui.domain.protocol import AgentEvent, EventType
 from agent_tui.services.deep_agents.event_translator import EventTranslator
+
+logger = logging.getLogger(__name__)
+
+
+def _normalize_tool_path(path: str) -> str:
+    """Normalize tool paths to be relative to current working directory.
+
+    DeepAgents LLM sometimes generates absolute paths like '/test.txt' which
+    would resolve to the filesystem root. This converts them to relative paths
+    so they resolve against the current working directory.
+
+    Args:
+        path: The path from the tool arguments
+
+    Returns:
+        Normalized path (relative if it was absolute root, otherwise unchanged)
+    """
+    if not path:
+        return path
+
+    # If path starts with / but is just /filename (not /home/...), make it relative
+    if path.startswith("/") and not path.startswith("//"):
+        # Check if it's a real absolute path or just /filename
+        # Real absolute paths usually have multiple components like /home/user/...
+        parts = Path(path).parts
+        if len(parts) <= 2:  # Just /filename or /dir/filename
+            # Convert /test.txt to test.txt (relative to cwd)
+            return path.lstrip("/")
+
+    return path
 
 
 class DeepAgentsAdapter:
@@ -41,6 +73,7 @@ class DeepAgentsAdapter:
         self._cancelled = False
         self._approval_event: asyncio.Event | None = None
         self._approval_result: bool = False
+        self._pending_tool_id: str | None = None
         self._answer_event: asyncio.Event | None = None
         self._user_answer: str = ""
 
@@ -87,8 +120,10 @@ class DeepAgentsAdapter:
 
         if self._agent is None:
             import os
+            from pathlib import Path
 
             from deepagents import create_deep_agent
+            from deepagents.backends.filesystem import FilesystemBackend
             from langchain.chat_models import init_chat_model
             from langgraph.checkpoint.memory import MemorySaver
 
@@ -101,9 +136,16 @@ class DeepAgentsAdapter:
             # This accepts bare model names like "gpt-4o" without date suffixes
             model = init_chat_model(self._model, use_responses_api=False)
 
+            # Create filesystem backend rooted at current working directory
+            # Virtual mode treats all paths as anchored to root_dir, so /test.txt
+            # resolves to <cwd>/test.txt instead of system root /test.txt
+            root_dir = Path.cwd()
+            backend = FilesystemBackend(root_dir=root_dir, virtual_mode=True)
+
             self._agent = create_deep_agent(
                 model=model,
                 checkpointer=checkpointer,
+                backend=backend,
             )
 
         return self._agent
@@ -147,19 +189,45 @@ class DeepAgentsAdapter:
                 if self._cancelled:
                     return
 
+                event_type = event.get("event") or event.get("event_type", "unknown")
+                logger.debug("[ADAPTER] Raw event from DeepAgents: %s", event_type)
+
                 translated = self._translator.translate(event)
-                for agent_event in translated:
-                    if agent_event.type == AgentEvent.type:
-                        if agent_event.type.value == "tool_call":
-                            self._approval_event = asyncio.Event()
-                            await self._approval_event.wait()
-                            if not self._approval_result:
-                                continue
-                    yield agent_event
+                agent_events = list(translated)
+                if agent_events:
+                    logger.debug("[ADAPTER] Translated %d events", len(agent_events))
+                    for agent_event in agent_events:
+                        logger.debug("[ADAPTER] Event type: %s", agent_event.type)
+
+                for agent_event in agent_events:
+                    if agent_event.type == EventType.TOOL_CALL:
+                        logger.info(
+                            "[ADAPTER] TOOL_CALL detected: %s (id=%s)", agent_event.tool_name, agent_event.tool_id
+                        )
+                        # Set up approval event BEFORE yielding
+                        self._approval_event = asyncio.Event()
+                        self._pending_tool_id = agent_event.tool_id
+
+                        # YIELD the TOOL_CALL event FIRST so TUI can show approval widget
+                        yield agent_event
+
+                        # NOW wait for approval after the event has been dispatched
+                        logger.info("[ADAPTER] Waiting for tool approval...")
+                        await self._approval_event.wait()
+                        if not self._approval_result:
+                            logger.info("[ADAPTER] Tool call rejected, skipping results")
+                            # Skip subsequent results for this tool call
+                            continue
+                        logger.info("[ADAPTER] Tool call approved, will show results")
+                    else:
+                        # Non-tool events are yielded normally
+                        yield agent_event
 
                 if event.get("event_type") == "on_chain_end":
+                    logger.debug("[ADAPTER] Chain end detected")
                     break
         except Exception as e:
+            logger.exception("[ADAPTER] Error in stream")
             yield AgentEvent(
                 type="error",
                 text=f"DeepAgents error: {str(e)}",

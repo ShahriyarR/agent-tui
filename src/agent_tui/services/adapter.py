@@ -81,6 +81,7 @@ class AgentAdapter:
             self.app.set_status("ready")
 
     async def _dispatch(self, event: AgentEvent) -> None:
+        logger.debug("[DISPATCH] Event type: %s", event.type)
         match event.type:
             case EventType.MESSAGE_CHUNK:
                 self.app.append_assistant_text(event.text)
@@ -89,21 +90,26 @@ class AgentAdapter:
                 self.app.finalize_assistant_message()
 
             case EventType.TOOL_CALL:
+                logger.info("[DISPATCH] TOOL_CALL received: %s (id=%s)", event.tool_name, event.tool_id)
                 if event.tool_name in FILE_TOOL_NAMES:
+                    logger.info("[DISPATCH] File tool detected: %s", event.tool_name)
                     from agent_tui.configurator.settings import settings
 
                     paths = _extract_file_paths_from_tool_args(event.tool_name, event.tool_args)
                     for path in paths:
                         if not settings.deepagents_file_tool_allowed(path):
+                            logger.warning("[DISPATCH] Path not allowed: %s", path)
                             await self.agent.approve_tool(event.tool_id, False)
                             self.app.show_error(f"Path not allowed: {path}")
                             return
 
+                logger.info("[DISPATCH] Requesting tool approval from app...")
                 approved = await self.app.request_tool_approval(
                     tool_name=event.tool_name,
                     tool_args=event.tool_args,
                     tool_id=event.tool_id,
                 )
+                logger.info("[DISPATCH] Tool approval result: %s", approved)
                 await self.agent.approve_tool(event.tool_id, approved)
 
             case EventType.TOOL_RESULT:

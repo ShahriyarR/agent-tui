@@ -4143,10 +4143,12 @@ class AgentTuiApp(App):
         Called by AgentAdapter on TOOL_CALL events. Delegates to
         _request_approval, translating its result dict to a bool.
         """
+        logger.info("[APP] request_tool_approval called: %s (id=%s)", tool_name, tool_id)
         action_request: dict[str, Any] = {"name": tool_name, "args": tool_args}
         result_future = await self._request_approval([action_request], None)
         try:
             result = await result_future
+            logger.info("[APP] Approval result: %s", result)
         except Exception:
             logger.exception("Error waiting for tool approval")
             return False

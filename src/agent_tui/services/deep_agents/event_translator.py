@@ -7,6 +7,34 @@ from typing import Any, Iterator
 from agent_tui.domain.protocol import AgentEvent, EventType
 
 
+def _normalize_tool_path(path: str) -> str:
+    """Normalize tool paths to be relative to current working directory.
+
+    DeepAgents LLM sometimes generates absolute paths like '/test.txt' which
+    would resolve to the filesystem root. This converts them to relative paths
+    so they resolve against the current working directory.
+
+    Args:
+        path: The path from the tool arguments
+
+    Returns:
+        Normalized path (relative if it was absolute root, otherwise unchanged)
+    """
+    if not path:
+        return path
+
+    # If path starts with / but is just /filename (not /home/...), make it relative
+    if path.startswith("/") and not path.startswith("//"):
+        # Check if it's a real absolute path or just /filename
+        # Real absolute paths usually have multiple components
+        parts = path.split("/")
+        if len(parts) <= 3:  # Just /filename or /dir/filename
+            # Convert /test.txt to test.txt (relative to cwd)
+            return path.lstrip("/")
+
+    return path
+
+
 class EventTranslator:
     """Translates DeepAgents/LangGraph checkpoint events to AgentEvent stream.
 
@@ -33,7 +61,7 @@ class EventTranslator:
         Args:
             event: Raw event dict with structure:
                 {
-                    "event_type": str,  # e.g., "on_chain_stream", "on_tool_start"
+                    "event": str,  # e.g., "on_chain_stream", "on_tool_start"
                     "data": dict,        # Event-specific payload
                     "run_id": str,       # Optional run identifier
                 }
@@ -41,12 +69,15 @@ class EventTranslator:
         Yields:
             AgentEvent objects based on the input event type.
         """
-        event_type = event.get("event_type", "")
+        # LangGraph uses "event" key, not "event_type"
+        event_type = event.get("event") or event.get("event_type", "")
         data = event.get("data", {})
         data_present = "data" in event
 
         if event_type == "on_chain_stream":
             yield from self._handle_chain_stream(data, event)
+        elif event_type == "on_chat_model_stream":
+            yield from self._handle_chat_model_stream(data, event)
         elif event_type == "on_tool_start":
             yield from self._handle_tool_start(data, event)
         elif event_type == "on_tool_end":
@@ -67,17 +98,53 @@ class EventTranslator:
                     text=content,
                 )
 
+    def _handle_chat_model_stream(self, data: dict[str, Any], event: dict[str, Any]) -> Iterator[AgentEvent]:
+        """Handle on_chat_model_stream events for message chunks from chat models."""
+        chunk = data.get("chunk")
+        if chunk is None:
+            return
+
+        # chunk is typically an AIMessage or AIMessageChunk with .content attribute
+        content = ""
+        if hasattr(chunk, "content"):
+            content = chunk.content
+        elif isinstance(chunk, dict):
+            content = chunk.get("content", "")
+
+        if content and isinstance(content, str):
+            yield AgentEvent(
+                type=EventType.MESSAGE_CHUNK,
+                text=content,
+            )
+
     def _handle_tool_start(self, data: dict[str, Any], event: dict[str, Any]) -> Iterator[AgentEvent]:
         """Handle on_tool_start events for tool calls."""
-        tool_name = data.get("name", "")
+        # In LangGraph events, tool name is at top level, not in data
+        tool_name = event.get("name", "") or data.get("name", "")
         tool_input = data.get("input", {})
         run_id = event.get("run_id", "")
 
         if tool_name:
+            # Normalize paths in tool arguments to resolve against current directory
+            # instead of filesystem root
+            normalized_input = dict(tool_input)  # Make a copy
+
+            # Common path argument names used by file tools
+            path_keys = ["file_path", "path", "file", "directory", "dir", "pattern", "glob_pattern"]
+            for key in path_keys:
+                if key in normalized_input and isinstance(normalized_input[key], str):
+                    normalized_input[key] = _normalize_tool_path(normalized_input[key])
+
+            # Handle old_string/new_string paths in edit_file
+            if tool_name == "edit_file":
+                if "old_string" in normalized_input:
+                    # Try to extract path from old_string if it contains one
+                    pass  # old_string is content, not a path
+
             yield AgentEvent(
                 type=EventType.TOOL_CALL,
                 tool_name=tool_name,
-                tool_args=tool_input,
+                tool_args=normalized_input,
                 tool_id=run_id,
             )
 
@@ -88,8 +155,15 @@ class EventTranslator:
         tool_output = data.get("output")
         if tool_output is None:
             return
+
+        # Get tool name and run_id from event (similar to _handle_tool_start)
+        tool_name = event.get("name", "") or data.get("name", "")
+        run_id = event.get("run_id", "")
+
         yield AgentEvent(
             type=EventType.TOOL_RESULT,
+            tool_name=tool_name,
+            tool_id=run_id,
             tool_output=str(tool_output),
         )
 
