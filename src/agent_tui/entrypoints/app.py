@@ -4218,16 +4218,26 @@ class AgentTuiApp(App):
         self.call_later(self._mount_message, ErrorMessage(text))
 
     def show_plan_step(self, step_text: str, current_step: int, total_steps: int) -> None:
-        self.call_later(
-            self._mount_message,
-            AppMessage(f"📋 Planning (step {current_step}/{total_steps}): {step_text}"),
-        )
+        progress = Content.styled(f"⚙ Planning {current_step}/{total_steps}", "bold $primary")
+        text = Content.styled(f"  {step_text}", "dim")
+        content = Content.assemble(progress, "\n", text)
+        self.call_later(self._mount_message, AppMessage(content))
 
     def show_subagent_started(self, subagent_name: str) -> None:
-        self.call_later(self._mount_message, AppMessage(f"🤖 Subagent started: {subagent_name}"))
+        name = subagent_name or "subagent"
+        content = Content.assemble(
+            Content.styled("→ Subagent: ", "bold $warning"),
+            Content.styled(name, "italic"),
+        )
+        self.call_later(self._mount_message, AppMessage(content))
 
     def show_subagent_finished(self, subagent_name: str) -> None:
-        self.call_later(self._mount_message, AppMessage(f"✅ Subagent finished: {subagent_name}"))
+        name = subagent_name or "subagent"
+        content = Content.assemble(
+            Content.styled("✓ Subagent done: ", "bold $success"),
+            Content.styled(name, "italic"),
+        )
+        self.call_later(self._mount_message, AppMessage(content))
 
     def show_context_summarized(self, token_count: int) -> None:
         self._update_status(f"Context compacted (≈{token_count:,} tokens)")
