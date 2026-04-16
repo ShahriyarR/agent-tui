@@ -1,0 +1,14 @@
+README.md
+  h_d1a0ff36e5926f 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "51908335287e772ada1f8e785b484d948e1f57ec",
+  "prompts": {},
+  "humans": {
+    "h_d1a0ff36e5926f": {
+      "author": "Shahriyar Rzayev"
+    }
+  }
+}
