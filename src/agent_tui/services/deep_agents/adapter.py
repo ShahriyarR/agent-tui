@@ -123,9 +123,10 @@ class DeepAgentsAdapter:
             from pathlib import Path
 
             from deepagents import create_deep_agent
-            from deepagents.backends.filesystem import FilesystemBackend
             from langchain.chat_models import init_chat_model
             from langgraph.checkpoint.memory import MemorySaver
+
+            from agent_tui.services.deep_agents.backend import create_backend
 
             if self._api_key:
                 os.environ["OPENAI_API_KEY"] = self._api_key
@@ -136,11 +137,12 @@ class DeepAgentsAdapter:
             # This accepts bare model names like "gpt-4o" without date suffixes
             model = init_chat_model(self._model, use_responses_api=False)
 
-            # Create filesystem backend rooted at current working directory
-            # Virtual mode treats all paths as anchored to root_dir, so /test.txt
-            # resolves to <cwd>/test.txt instead of system root /test.txt
-            root_dir = Path.cwd()
-            backend = FilesystemBackend(root_dir=root_dir, virtual_mode=True)
+            # Create backend with file + shell support
+            # LocalShellBackend extends FilesystemBackend, providing both:
+            # - File operations: read_file, write_file, edit_file, glob, grep, ls
+            # - Shell execution: execute tool (shell commands)
+            # Both are rooted at current working directory
+            backend = create_backend()
 
             self._agent = create_deep_agent(
                 model=model,

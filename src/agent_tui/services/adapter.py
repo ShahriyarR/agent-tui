@@ -103,6 +103,23 @@ class AgentAdapter:
                             self.app.show_error(f"Path not allowed: {path}")
                             return
 
+                # Check for dangerous shell commands
+                if event.tool_name == "execute":
+                    from agent_tui.configurator.settings import (
+                        DANGEROUS_SHELL_PATTERNS,
+                        contains_dangerous_patterns,
+                    )
+
+                    command = event.tool_args.get("command", "")
+                    if contains_dangerous_patterns(command):
+                        logger.warning("[DISPATCH] Dangerous shell command detected: %s", command)
+                        await self.agent.approve_tool(event.tool_id, False)
+                        self.app.show_error(
+                            f"Command blocked for safety: {command}\n"
+                            f"Matches dangerous pattern: {DANGEROUS_SHELL_PATTERNS}"
+                        )
+                        return
+
                 logger.info("[DISPATCH] Requesting tool approval from app...")
                 approved = await self.app.request_tool_approval(
                     tool_name=event.tool_name,
