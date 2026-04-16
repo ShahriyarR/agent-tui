@@ -146,6 +146,9 @@ class AgentAdapter:
                 self.app.show_error(event.text)
 
             case EventType.PLAN_STEP:
+                self.app.set_status(
+                    f"Planning: step {event.plan_current_step}/{event.plan_total_steps}"
+                )
                 self.app.show_plan_step(
                     event.plan_step_text,
                     event.plan_current_step,
@@ -153,9 +156,12 @@ class AgentAdapter:
                 )
 
             case EventType.SUBAGENT_START:
+                name = event.subagent_name or "subagent"
+                self.app.set_status(f"Running subagent: {name}")
                 self.app.show_subagent_started(event.subagent_name)
 
             case EventType.SUBAGENT_END:
+                self.app.set_status("thinking")
                 self.app.show_subagent_finished(event.subagent_name)
 
             case EventType.CONTEXT_SUMMARIZED:
