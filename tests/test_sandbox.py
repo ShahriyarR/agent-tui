@@ -40,13 +40,13 @@ class TestSandboxBackendInit:
         """Cleanup flag defaults to True."""
         monkeypatch.chdir(tmp_path)
         backend = SandboxBackend()
-        assert backend.cleanup is True
+        assert backend.auto_cleanup is True
 
     def test_cleanup_flag_false(self, tmp_path):
         """Cleanup flag can be set to False."""
         custom_dir = tmp_path / "persist-sandbox"
         backend = SandboxBackend(root_dir=custom_dir, cleanup=False)
-        assert backend.cleanup is False
+        assert backend.auto_cleanup is False
 
 
 class TestPathResolution:
@@ -820,7 +820,7 @@ class TestCleanup:
         (backend.root_dir / "test.txt").write_text("content")
         assert backend.root_dir.exists()
 
-        backend.destroy()
+        backend.cleanup()
 
         assert not backend.root_dir.exists()
 
@@ -830,7 +830,7 @@ class TestCleanup:
         backend = SandboxBackend(cleanup=False)
         (backend.root_dir / "test.txt").write_text("content")
 
-        backend.destroy()
+        backend.cleanup()
 
         assert backend.root_dir.exists()
         assert (backend.root_dir / "test.txt").exists()
@@ -842,7 +842,7 @@ class TestCleanup:
         backend.root_dir.rmdir()
         assert not backend.root_dir.exists()
 
-        backend.destroy()  # Should not raise
+        backend.cleanup()  # Should not raise
 
 
 class TestSandboxIsolation:

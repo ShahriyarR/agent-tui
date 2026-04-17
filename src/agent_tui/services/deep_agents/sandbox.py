@@ -53,10 +53,15 @@ class SandboxBackend(SandboxBackendProtocol):
             default_timeout: Default timeout in seconds for shell commands.
         """
         self.root_dir = Path(root_dir) if root_dir else Path.cwd() / ".agent-sandbox"
-        self.cleanup = cleanup
+        self._should_cleanup = cleanup
         self._max_output_bytes = max_output_bytes
         self._default_timeout = default_timeout
         self._ensure_sandbox()
+
+    @property
+    def auto_cleanup(self) -> bool:
+        """Whether sandbox will be cleaned up on destruction."""
+        return self._should_cleanup
 
     def _ensure_sandbox(self) -> None:
         """Create sandbox directory if it doesn't exist."""
@@ -708,9 +713,9 @@ class SandboxBackend(SandboxBackendProtocol):
         """Async download files from sandbox."""
         return self.download_files(paths)
 
-    def destroy(self) -> None:
+    def cleanup(self) -> None:
         """Clean up sandbox if configured."""
-        if self.cleanup and self.root_dir.exists():
+        if self._should_cleanup and self.root_dir.exists():
             try:
                 shutil.rmtree(self.root_dir)
                 logger.info("Cleaned up sandbox at %s", self.root_dir)
@@ -718,13 +723,9 @@ class SandboxBackend(SandboxBackendProtocol):
                 logger.warning("Failed to cleanup sandbox: %s", e)
 
     def __del__(self) -> None:
-        """Destructor - attempt cleanup if destroy wasn't called."""
-        if self.cleanup and hasattr(self, "root_dir") and self.root_dir.exists():
+        """Destructor - attempt cleanup if cleanup wasn't called."""
+        if self._should_cleanup and hasattr(self, "root_dir") and self.root_dir.exists():
             try:
                 shutil.rmtree(self.root_dir)
             except Exception:
                 pass  # Best effort in destructor
-
-
-# Backwards compatibility alias
-cleanup = SandboxBackend.destroy
