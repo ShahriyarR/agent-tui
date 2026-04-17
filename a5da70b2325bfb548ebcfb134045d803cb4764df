@@ -1,0 +1,539 @@
+src/agent_tui/entrypoints/app.py
+  2925faec448e5273 64,79,660-662,730-732,753,828-832,3639,3641-3642,3644-3648
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "a5da70b2325bfb548ebcfb134045d803cb4764df",
+  "prompts": {
+    "2925faec448e5273": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_263586a03ffe4I51r4i0TRKV8m",
+        "model": "opencode-go/minimax-m2.7"
+      },
+      "human_author": "Shahriyar Rzayev",
+      "messages": [
+        {
+          "type": "user",
+          "text": "You are implementing Task 2: Integrate InfoPanel into App\n\n## Task Description\n\nModify `src/agent_tui/entrypoints/app.py` to integrate the InfoPanel widget:\n\n### Changes needed:\n\n1. **Import InfoPanel** (around line 46-66):\n   ```python\n   from agent_tui.entrypoints.widgets.info_panel import InfoPanel\n   ```\n\n2. **Add instance variable in __init__** (around line 656):\n   ```python\n   self._info_panel: InfoPanel | None = None\n   ```\n\n3. **Add InfoPanel to compose()** (around line 724, after status bar):\n   ```python\n   yield InfoPanel(id=\"info-panel\")\n   ```\n\n4. **Query InfoPanel in on_mount** (around line 744-745):\n   After `self._mcp_panel = self.query_one(\"#mcp-panel\", MCPPanel)`:\n   ```python\n   self._info_panel = self.query_one(\"#info-panel\", InfoPanel)\n   ```\n\n5. **Toggle behavior** - Currently Ctrl+M toggles `toggle_mcp_panel`. Extend it to also toggle InfoPanel visibility. Modify `toggle_mcp_panel` action to show/hide both panels.\n\n6. **Auto-hide on narrow terminals** - Add logic to check terminal width and hide InfoPanel when < 80 columns. This could be in `on_resize` or a dedicated method.\n\n## Context\n\nExisting pattern:\n- MCPPanel is toggled via `toggle_mcp_panel` binding (ctrl+m)\n- MCPPanel is docked right like InfoPanel will be\n- Status bar already tracks tokens and can provide data\n\n## Before You Begin\n\nIf you have questions about the approach, ask now.\n\n## Your Job\n\n1. Make the changes to app.py\n2. Verify imports work\n3. Run a basic test to ensure app still starts\n4. Commit your work\n\nWork from: /home/shako/REPOS/Indie-Hacking/agent-tui\n\n**Report:**\n- Status: DONE | BLOCKED | NEEDS_CONTEXT\n- What you implemented\n- Files changed",
+          "timestamp": "2026-04-17T18:15:21.856+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 40,
+            "offset": 40
+          },
+          "timestamp": "2026-04-17T18:15:21.863+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 20,
+            "offset": 650
+          },
+          "timestamp": "2026-04-17T18:15:21.863+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 40,
+            "offset": 718
+          },
+          "timestamp": "2026-04-17T18:15:21.863+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 30,
+            "offset": 738
+          },
+          "timestamp": "2026-04-17T18:15:21.863+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "pattern": "toggle_mcp_panel"
+          },
+          "timestamp": "2026-04-17T18:15:27.766+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 20,
+            "offset": 462
+          },
+          "timestamp": "2026-04-17T18:15:32.438+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 25,
+            "offset": 3620
+          },
+          "timestamp": "2026-04-17T18:15:32.438+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 40,
+            "offset": 3644
+          },
+          "timestamp": "2026-04-17T18:15:36.005+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob",
+          "input": {
+            "pattern": "**/info_panel.py"
+          },
+          "timestamp": "2026-04-17T18:15:38.877+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/widgets/info_panel.py",
+            "limit": 50
+          },
+          "timestamp": "2026-04-17T18:15:42.966+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I'll make the changes:",
+          "timestamp": "2026-04-17T18:15:45.744+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "newString": "from agent_tui.entrypoints.widgets.info_panel import InfoPanel\nfrom agent_tui.entrypoints.widgets.mcp_panel import MCPPanel\nfrom agent_tui.entrypoints.widgets.status import StatusBar",
+            "oldString": "from agent_tui.entrypoints.widgets.mcp_panel import MCPPanel\nfrom agent_tui.entrypoints.widgets.status import StatusBar"
+          },
+          "timestamp": "2026-04-17T18:15:45.744+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "newString": "        self._mcp_panel: MCPPanel | None = None\n        \"\"\"MCP tools panel widget (shown/hidden via Ctrl+M).\"\"\"\n\n        self._info_panel: InfoPanel | None = None\n        \"\"\"Info panel widget (shown/hidden via Ctrl+M).\"\"\"",
+            "oldString": "        self._mcp_panel: MCPPanel | None = None\n        \"\"\"MCP tools panel widget (shown/hidden via Ctrl+M).\"\"\""
+          },
+          "timestamp": "2026-04-17T18:15:45.744+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "newString": "        # Status bar at bottom\n        yield StatusBar(cwd=self._cwd, id=\"status-bar\")\n\n        # Info panel (narrow sidebar, hidden by default)\n        yield InfoPanel(id=\"info-panel\")",
+            "oldString": "        # Status bar at bottom\n        yield StatusBar(cwd=self._cwd, id=\"status-bar\")"
+          },
+          "timestamp": "2026-04-17T18:15:45.744+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "newString": "        self._status_bar = self.query_one(\"#status-bar\", StatusBar)\n        self._chat_input = self.query_one(\"#input-area\", ChatInput)\n        self._info_panel = self.query_one(\"#info-panel\", InfoPanel)",
+            "oldString": "        self._status_bar = self.query_one(\"#status-bar\", StatusBar)\n        self._chat_input = self.query_one(\"#input-area\", ChatInput)"
+          },
+          "timestamp": "2026-04-17T18:15:45.744+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/widgets/info_panel.py",
+            "limit": 40,
+            "offset": 180
+          },
+          "timestamp": "2026-04-17T18:15:56.319+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob",
+          "input": {
+            "pattern": "**/info_panel.css"
+          },
+          "timestamp": "2026-04-17T18:16:05.893+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src",
+            "pattern": "info-panel"
+          },
+          "timestamp": "2026-04-17T18:16:09.103+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src",
+            "pattern": "MCPPanel"
+          },
+          "timestamp": "2026-04-17T18:16:12.244+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/widgets/mcp_panel.py",
+            "limit": 80,
+            "offset": 30
+          },
+          "timestamp": "2026-04-17T18:16:17.402+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/widgets/info_panel.py",
+            "pattern": "InfoPanel"
+          },
+          "timestamp": "2026-04-17T18:16:20.837+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/widgets/info_panel.py",
+            "pattern": "DEFAULT_CSS"
+          },
+          "timestamp": "2026-04-17T18:16:25.703+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/widgets/info_panel.py",
+            "limit": 60,
+            "offset": 40
+          },
+          "timestamp": "2026-04-17T18:16:36.521+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob",
+          "input": {
+            "pattern": "**/*.tcss"
+          },
+          "timestamp": "2026-04-17T18:16:40.797+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.tcss",
+            "pattern": "info"
+          },
+          "timestamp": "2026-04-17T18:16:46.593+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.tcss",
+            "limit": 100,
+            "offset": 376
+          },
+          "timestamp": "2026-04-17T18:16:49.622+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.tcss",
+            "pattern": "^InfoPanel"
+          },
+          "timestamp": "2026-04-17T18:16:52.783+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.tcss",
+            "limit": 15,
+            "offset": 370
+          },
+          "timestamp": "2026-04-17T18:16:56.300+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.tcss",
+            "pattern": "hidden|display.*none|visibility"
+          },
+          "timestamp": "2026-04-17T18:16:59.657+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 35,
+            "offset": 3625
+          },
+          "timestamp": "2026-04-17T18:17:05.477+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "pattern": "def on_resize"
+          },
+          "timestamp": "2026-04-17T18:17:14.758+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "pattern": "async def on_"
+          },
+          "timestamp": "2026-04-17T18:17:21.574+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "newString": "    def action_toggle_mcp_panel(self) -> None:\n        \"\"\"Toggle the MCP tools panel and InfoPanel visibility.\n\n        Shows or hides both panels together. MCPPanel is dynamically\n        mounted/unmounted while InfoPanel visibility is toggled.\n        \"\"\"\n        # Toggle InfoPanel visibility\n        if self._info_panel is not None:\n            self._info_panel.set_visible(not self._info_panel.visible)\n\n        # Toggle MCPPanel mount/unmount\n        if self._mcp_panel is not None and self._mcp_panel.is_attached:\n            self._mcp_panel.remove()\n            self._mcp_panel = None\n            return\n\n        # Import MCPToolManager and get the active manager\n        from agent_tui.services.deep_agents.mcp import _active_managers\n\n        # Get the first active manager (or None if none exists)\n        manager = None\n        if _active_managers:\n            manager = _active_managers[0]\n\n        # Create and mount the panel\n        self._mcp_panel = MCPPanel(tool_manager=manager)\n        self.mount(self._mcp_panel)",
+            "oldString": "    def action_toggle_mcp_panel(self) -> None:\n        \"\"\"Toggle the MCP tools panel visibility.\n\n        Creates and mounts the panel if not visible, removes it if already shown.\n        The panel displays MCP server status and their available tools.\n        \"\"\"\n        # Check if panel is already mounted\n        if self._mcp_panel is not None and self._mcp_panel.is_attached:\n            self._mcp_panel.remove()\n            self._mcp_panel = None\n            return\n\n        # Import MCPToolManager and get the active manager\n        from agent_tui.services.deep_agents.mcp import _active_managers\n\n        # Get the first active manager (or None if none exists)\n        manager = None\n        if _active_managers:\n            manager = _active_managers[0]\n\n        # Create and mount the panel\n        self._mcp_panel = MCPPanel(tool_manager=manager)\n        self.mount(self._mcp_panel)"
+          },
+          "timestamp": "2026-04-17T18:17:25.061+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "pattern": "def on_key"
+          },
+          "timestamp": "2026-04-17T18:17:34.171+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 40,
+            "offset": 780
+          },
+          "timestamp": "2026-04-17T18:17:37.534+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "pattern": "_post_paint_init"
+          },
+          "timestamp": "2026-04-17T18:17:40.967+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 20,
+            "offset": 822
+          },
+          "timestamp": "2026-04-17T18:17:44.162+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "newString": "            self.call_after_refresh(self._post_paint_init)\n\n    def on_resize(self, event: \"app.Resize\") -> None:\n        \"\"\"Auto-hide InfoPanel on narrow terminals (< 80 columns).\"\"\"\n        if self._info_panel is not None and event.width < 80:\n            self._info_panel.set_visible(False)\n\n    async def _post_paint_init(self) -> None:",
+            "oldString": "            self.call_after_refresh(self._post_paint_init)\n\n    async def _post_paint_init(self) -> None:"
+          },
+          "timestamp": "2026-04-17T18:17:48.373+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "pattern": "from textual.events"
+          },
+          "timestamp": "2026-04-17T18:17:53.364+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "pattern": "Resize"
+          },
+          "timestamp": "2026-04-17T18:17:56.846+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "limit": 15,
+            "offset": 74
+          },
+          "timestamp": "2026-04-17T18:18:02.500+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "newString": "    from textual.events import Click, MouseUp, Paste, Resize",
+            "oldString": "    from textual.events import Click, MouseUp, Paste"
+          },
+          "timestamp": "2026-04-17T18:18:07.635+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "newString": "    def on_resize(self, event: Resize) -> None:",
+            "oldString": "    def on_resize(self, event: \"app.Resize\") -> None:"
+          },
+          "timestamp": "2026-04-17T18:18:11.331+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob",
+          "input": {
+            "pattern": "**/pytest.ini"
+          },
+          "timestamp": "2026-04-17T18:18:14.698+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob",
+          "input": {
+            "pattern": "**/pyproject.toml"
+          },
+          "timestamp": "2026-04-17T18:18:14.698+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && python -c \"from agent_tui.entrypoints.app import TUI; print('Import OK')\"",
+            "description": "Test app import"
+          },
+          "timestamp": "2026-04-17T18:18:18.176+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && python3 -c \"from agent_tui.entrypoints.app import TUI; print('Import OK')\"",
+            "description": "Test app import with python3"
+          },
+          "timestamp": "2026-04-17T18:18:21.814+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py",
+            "pattern": "^class.*App"
+          },
+          "timestamp": "2026-04-17T18:18:25.098+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && python3 -c \"from agent_tui.entrypoints.app import AgentTuiApp; print('Import OK')\"",
+            "description": "Test app import with correct class name"
+          },
+          "timestamp": "2026-04-17T18:18:28.317+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && python3 -c \"from agent_tui.entrypoints.widgets.info_panel import InfoPanel; print('InfoPanel import OK')\"",
+            "description": "Test InfoPanel import"
+          },
+          "timestamp": "2026-04-17T18:18:31.831+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob",
+          "input": {
+            "pattern": "**/test*.py"
+          },
+          "timestamp": "2026-04-17T18:18:35.195+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/pyproject.toml",
+            "pattern": "pytest"
+          },
+          "timestamp": "2026-04-17T18:18:38.048+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && python3 -m pytest tests/test_info_panel.py -v --tb=short 2>&1 | head -50",
+            "description": "Run info panel tests",
+            "timeout": 60000
+          },
+          "timestamp": "2026-04-17T18:18:40.887+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && git status",
+            "description": "Check git status"
+          },
+          "timestamp": "2026-04-17T18:18:44.508+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && git add src/agent_tui/entrypoints/app.py && git commit -m \"Integrate InfoPanel into TUI app\n\n- Import InfoPanel alongside MCPPanel\n- Add _info_panel instance variable to track the widget\n- Add InfoPanel to compose() with id='info-panel'\n- Query InfoPanel in on_mount like other widgets\n- Extend toggle_mcp_panel action to also toggle InfoPanel visibility\n- Add on_resize handler to auto-hide InfoPanel on narrow terminals (<80 cols)\n- Add Resize to TYPE_CHECKING imports\"",
+            "description": "Commit InfoPanel integration changes"
+          },
+          "timestamp": "2026-04-17T18:18:47.502+00:00"
+        }
+      ],
+      "total_additions": 23,
+      "total_deletions": 6,
+      "accepted_lines": 22,
+      "overriden_lines": 0
+    }
+  }
+}
