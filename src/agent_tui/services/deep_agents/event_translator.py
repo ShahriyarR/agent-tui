@@ -48,9 +48,12 @@ class EventTranslator:
         - on_tool_start → TOOL_CALL
         - on_tool_end → TOOL_RESULT
 
-    Not yet handled (future phases):
-        - PLAN_STEP (Phase 5)
-        - SUBAGENT_START/SUBAGENT_END (Phase 5)
+    Supported events (Phase 5):
+        - on_tool_start where tool name is "task" → SUBAGENT_START
+        - on_tool_end where tool name is "task" → SUBAGENT_END
+
+    Not translated here (handled upstream or future phases):
+        - PLAN_STEP — not produced by LangGraph tool events; handled by adapter dispatch
         - CONTEXT_SUMMARIZED (Phase 6)
         - INTERRUPT (Phase 8)
     """
@@ -124,6 +127,16 @@ class EventTranslator:
         tool_input = data.get("input", {})
         run_id = event.get("run_id", "")
 
+        if tool_name == "task":
+            subagent_name = (
+                tool_input.get("description", "")
+                or tool_input.get("task", "")
+                or "subagent"
+            )
+            subagent_name = subagent_name[:80]
+            yield AgentEvent(type=EventType.SUBAGENT_START, subagent_name=subagent_name)
+            return
+
         if tool_name:
             # Normalize paths in tool arguments to resolve against current directory
             # instead of filesystem root
@@ -150,15 +163,19 @@ class EventTranslator:
 
     def _handle_tool_end(self, data: dict[str, Any], event: dict[str, Any]) -> Iterator[AgentEvent]:
         """Handle on_tool_end events for tool results."""
+        # Get tool name early so task tool check can run regardless of output presence
+        tool_name = event.get("name", "") or data.get("name", "")
+        run_id = event.get("run_id", "")
+
+        if tool_name == "task":
+            yield AgentEvent(type=EventType.SUBAGENT_END, subagent_name="")
+            return
+
         if "output" not in data:
             return
         tool_output = data.get("output")
         if tool_output is None:
             return
-
-        # Get tool name and run_id from event (similar to _handle_tool_start)
-        tool_name = event.get("name", "") or data.get("name", "")
-        run_id = event.get("run_id", "")
 
         yield AgentEvent(
             type=EventType.TOOL_RESULT,

@@ -188,3 +188,118 @@ class TestTranslateReturnsIterator:
         result = translator.translate(event)
         assert hasattr(result, "__iter__")
         assert hasattr(result, "__next__")
+
+
+class TestSubagentEvents:
+    def test_on_tool_start_task_yields_subagent_start(self, translator: EventTranslator):
+        event = {
+            "event": "on_tool_start",
+            "name": "task",
+            "data": {
+                "input": {"description": "Research competitor pricing"},
+            },
+            "run_id": "run_abc",
+        }
+        results = list(translator.translate(event))
+        assert len(results) == 1
+        assert results[0].type == EventType.SUBAGENT_START
+        assert results[0].subagent_name == "Research competitor pricing"
+
+    def test_on_tool_start_task_not_tool_call(self, translator: EventTranslator):
+        event = {
+            "event": "on_tool_start",
+            "name": "task",
+            "data": {
+                "input": {"description": "Some subagent task"},
+            },
+        }
+        results = list(translator.translate(event))
+        assert len(results) == 1
+        assert results[0].type != EventType.TOOL_CALL
+
+    def test_on_tool_start_task_falls_back_to_task_field(self, translator: EventTranslator):
+        event = {
+            "event": "on_tool_start",
+            "name": "task",
+            "data": {
+                "input": {"task": "Analyze the dataset"},
+            },
+        }
+        results = list(translator.translate(event))
+        assert len(results) == 1
+        assert results[0].type == EventType.SUBAGENT_START
+        assert results[0].subagent_name == "Analyze the dataset"
+
+    def test_on_tool_start_task_falls_back_to_subagent_default(self, translator: EventTranslator):
+        event = {
+            "event": "on_tool_start",
+            "name": "task",
+            "data": {
+                "input": {},
+            },
+        }
+        results = list(translator.translate(event))
+        assert len(results) == 1
+        assert results[0].type == EventType.SUBAGENT_START
+        assert results[0].subagent_name == "subagent"
+
+    def test_on_tool_start_task_truncates_to_80_chars(self, translator: EventTranslator):
+        long_name = "A" * 120
+        event = {
+            "event": "on_tool_start",
+            "name": "task",
+            "data": {
+                "input": {"description": long_name},
+            },
+        }
+        results = list(translator.translate(event))
+        assert len(results) == 1
+        assert results[0].type == EventType.SUBAGENT_START
+        assert len(results[0].subagent_name) == 80
+
+    def test_on_tool_end_task_yields_subagent_end(self, translator: EventTranslator):
+        event = {
+            "event": "on_tool_end",
+            "name": "task",
+            "data": {
+                "output": "Subagent completed successfully",
+            },
+            "run_id": "run_abc",
+        }
+        results = list(translator.translate(event))
+        assert len(results) == 1
+        assert results[0].type == EventType.SUBAGENT_END
+
+    def test_on_tool_end_task_not_tool_result(self, translator: EventTranslator):
+        event = {
+            "event": "on_tool_end",
+            "name": "task",
+            "data": {
+                "output": "done",
+            },
+        }
+        results = list(translator.translate(event))
+        assert len(results) == 1
+        assert results[0].type != EventType.TOOL_RESULT
+
+    def test_on_tool_end_task_no_output_still_yields_subagent_end(self, translator: EventTranslator):
+        """task tool with missing output key still emits SUBAGENT_END (ordering fix)."""
+        event = {"event": "on_tool_end", "name": "task", "data": {}}
+        results = list(translator.translate(event))
+        assert len(results) == 1
+        assert results[0].type == EventType.SUBAGENT_END
+
+    def test_on_tool_start_read_file_still_yields_tool_call(self, translator: EventTranslator):
+        """Regression check: non-task tools still emit TOOL_CALL."""
+        event = {
+            "event": "on_tool_start",
+            "name": "read_file",
+            "data": {
+                "input": {"file_path": "README.md"},
+            },
+            "run_id": "run_xyz",
+        }
+        results = list(translator.translate(event))
+        assert len(results) == 1
+        assert results[0].type == EventType.TOOL_CALL
+        assert results[0].tool_name == "read_file"
