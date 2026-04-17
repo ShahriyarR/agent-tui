@@ -744,6 +744,8 @@
       <button class="nav-dot" data-target="module-8" aria-label="Module 8"></button>
       <button class="nav-dot" data-target="module-9" aria-label="Module 9"></button>
       <button class="nav-dot" data-target="module-10" aria-label="Module 10"></button>
+      <button class="nav-dot" data-target="module-11" aria-label="Module 11"></button>
+      <button class="nav-dot" data-target="module-12" aria-label="Module 12"></button>
     </div>
   </div>
 </nav>
@@ -2147,11 +2149,416 @@ $((1+1))
     </div>
 
     <div class="screen animate-in">
+      <h2 class="screen-heading">Human-in-the-Loop: Interrupt &amp; Resume</h2>
+      <p class="module-subtitle">Approval flow with LangGraph interrupts — Phase 8</p>
+      <p style="margin-bottom: var(--space-6);">Phase 8 completes the <span class="term" data-definition="Human-in-the-Loop (HITL) means the agent pauses for user approval before executing sensitive operations.">Human-in-the-Loop</span> system by integrating LangGraph's interrupt/resume mechanism. When the agent encounters sensitive tools (execute, write_file, web_search), it pauses and waits for user approval.</p>
+      
+      <div class="comparison-table" style="margin-bottom: var(--space-8);">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Interrupt?</th>
+              <th>Why</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>execute</code></td>
+              <td><span style="color: var(--color-accent)">● Yes</span></td>
+              <td>Shell commands can modify system state</td>
+            </tr>
+            <tr>
+              <td><code>write_file</code></td>
+              <td><span style="color: var(--color-accent)">● Yes</span></td>
+              <td>Creates or overwrites files</td>
+            </tr>
+            <tr>
+              <td><code>edit_file</code></td>
+              <td><span style="color: var(--color-accent)">● Yes</span></td>
+              <td>Modifies existing files</td>
+            </tr>
+            <tr>
+              <td><code>web_search</code></td>
+              <td><span style="color: var(--color-accent)">● Yes</span></td>
+              <td>External network calls</td>
+            </tr>
+            <tr>
+              <td><code>fetch_url</code></td>
+              <td><span style="color: var(--color-accent)">● Yes</span></td>
+              <td>Downloads external content</td>
+            </tr>
+            <tr>
+              <td><code>read_file</code></td>
+              <td><span style="color: var(--color-success)">○ No</span></td>
+              <td>Read-only, safe operation</td>
+            </tr>
+            <tr>
+              <td><code>glob</code>, <code>grep</code></td>
+              <td><span style="color: var(--color-success)">○ No</span></td>
+              <td>Search operations are safe</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-block animate-in" style="margin-bottom: var(--space-6);">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-filename">services/deep_agents/adapter.py</span>
+        </div>
+        <div class="code-content">
+<pre style="margin: 0;"><code style="font-family: var(--font-mono); font-size: var(--text-sm);"><span style="color: var(--color-code-comment)"># Configure which tools trigger interrupts</span>
+interrupt_on = InterruptOnConfig(
+    tools={
+        <span style="color: var(--color-code-string)">"execute"</span>: <span style="color: var(--color-code-keyword)">True</span>,       <span style="color: var(--color-code-comment)"># Always interrupt on shell commands</span>
+        <span style="color: var(--color-code-string)">"write_file"</span>: <span style="color: var(--color-code-keyword)">True</span>,  <span style="color: var(--color-code-comment)"># Interrupt on file writes</span>
+        <span style="color: var(--color-code-string)">"edit_file"</span>: <span style="color: var(--color-code-keyword)">True</span>,  <span style="color: var(--color-code-comment)"># Interrupt on file edits</span>
+        <span style="color: var(--color-code-string)">"read_file"</span>: <span style="color: var(--color-code-keyword)">False</span>, <span style="color: var(--color-code-comment)"># Auto-approve reads (safe)</span>
+        <span style="color: var(--color-code-string)">"web_search"</span>: <span style="color: var(--color-code-keyword)">True</span>,  <span style="color: var(--color-code-comment)"># Interrupt on external calls</span>
+    }
+)
+
+<span style="color: var(--color-code-keyword)">self</span>._agent = create_deep_agent(
+    ...
+    interrupt_on=interrupt_on,
+)</code></pre>
+        </div>
+      </div>
+
+      <div class="pattern-cards stagger-children" style="margin-bottom: var(--space-8);">
+        <div class="pattern-card animate-in" style="--stagger-index: 0; border-top: 3px solid var(--color-actor-1)">
+          <div class="pattern-icon" style="background: var(--color-actor-1)">⏸️</div>
+          <h4 class="pattern-title">Interrupt</h4>
+          <p class="pattern-desc">LangGraph hits a sensitive tool → emits <code style="font-family: var(--font-mono); font-size: var(--text-sm)">INTERRUPT</code> event → EventTranslator converts to <code style="font-family: var(--font-mono); font-size: var(--text-sm)">EventType.INTERRUPT</code></p>
+        </div>
+        <div class="pattern-card animate-in" style="--stagger-index: 1; border-top: 3px solid var(--color-actor-3)">
+          <div class="pattern-icon" style="background: var(--color-actor-3)">👤</div>
+          <h4 class="pattern-title">Approve/Reject/Edit</h4>
+          <p class="pattern-desc">TUI shows interrupt overlay → User chooses approve (y), reject (n), or edit (e) → Result sent back to adapter</p>
+        </div>
+        <div class="pattern-card animate-in" style="--stagger-index: 2; border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">▶️</div>
+          <h4 class="pattern-title">Resume</h4>
+          <p class="pattern-desc">Adapter calls <code style="font-family: var(--font-mono); font-size: var(--text-sm)">approve_tool()</code> → LangGraph receives <code style="font-family: var(--font-mono); font-size: var(--text-sm)">Command(resume=...)</code> → Agent continues execution</p>
+        </div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top: var(--space-6)">
+        <div class="callout-icon">🛡️</div>
+        <div class="callout-content">
+          <strong class="callout-title">Safety patterns are blocked automatically</strong>
+          <p>Before the interrupt overlay even appears, commands with dangerous patterns (<code style="font-family: var(--font-mono); font-size: var(--text-sm)">$(...)</code>, <code style="font-family: var(--font-mono); font-size: var(--text-sm)">`...`</code>, <code style="font-family: var(--font-mono); font-size: var(--text-sm)">$VAR</code>, redirects) are auto-rejected. This happens in <code style="font-family: var(--font-mono); font-size: var(--text-sm)">services/adapter.py</code> using <code style="font-family: var(--font-mono); font-size: var(--text-sm)">contains_dangerous_patterns()</code>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">The Interrupt Overlay UI</h2>
+      <p style="margin-bottom: var(--space-6);">When an interrupt occurs, the TUI displays a modal overlay with tool details and approval options:</p>
+      
+      <div class="code-block animate-in" style="margin-bottom: var(--space-6); background: var(--color-surface);">
+        <div style="padding: var(--space-6); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.8;">
+          <div style="color: var(--color-text-muted); margin-bottom: var(--space-4);">┌─────────────────────────────────────────┐</div>
+          <div style="margin-bottom: var(--space-2);"><span style="color: var(--color-accent)">⚠️</span> Tool Execution Requested</div>
+          <div style="color: var(--color-text-muted); margin: var(--space-4) 0;">──────────────────────────────────────────</div>
+          <div style="margin-bottom: var(--space-2);">Tool: <strong>execute</strong></div>
+          <div style="margin-bottom: var(--space-4);">Command: ls -la</div>
+          <div style="color: var(--color-text-muted); margin: var(--space-4) 0;">──────────────────────────────────────────</div>
+          <div style="margin-bottom: var(--space-2);"><strong>[y/1]</strong> Approve</div>
+          <div style="margin-bottom: var(--space-2);"><strong>[e/2]</strong> Edit (stub)</div>
+          <div style="margin-bottom: var(--space-4);"><strong>[n/3]</strong> Reject</div>
+          <div style="color: var(--color-text-muted);">└─────────────────────────────────────────┘</div>
+        </div>
+      </div>
+
+      <p style="margin-bottom: var(--space-6);">The overlay is implemented as a <span class="term" data-definition="ModalScreen in Textual is a full-screen overlay that captures all input until dismissed.">ModalScreen</span> widget with keyboard shortcuts:</p>
+
+      <div class="comparison-table" style="margin-bottom: var(--space-6);">
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Action</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>y</code> or <code>1</code></td>
+              <td>Approve</td>
+              <td>Tool executes, agent continues</td>
+            </tr>
+            <tr>
+              <td><code>n</code> or <code>3</code> or <code>Esc</code></td>
+              <td>Reject</td>
+              <td>Tool skipped, agent continues without result</td>
+            </tr>
+            <tr>
+              <td><code>e</code> or <code>2</code></td>
+              <td>Edit (stub)</td>
+              <td>Currently falls through to approve (future: modify args)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">MCP &amp; Sandboxes: External Tools &amp; Isolation</h2>
+      <p class="module-subtitle">MCP tool loading and sandboxed execution — Phase 9</p>
+      <p style="margin-bottom: var(--space-6);">Phase 9 adds two major capabilities: <strong>MCP (Model Context Protocol)</strong> for connecting to external tool ecosystems, and <strong>Sandbox</strong> for isolated, secure execution.</p>
+
+      <div class="pattern-cards stagger-children" style="margin-bottom: var(--space-8);">
+        <div class="pattern-card animate-in" style="--stagger-index: 0; border-top: 3px solid var(--color-actor-4)">
+          <div class="pattern-icon" style="background: var(--color-actor-4)">🔌</div>
+          <h4 class="pattern-title">MCP Integration</h4>
+          <p class="pattern-desc">Parse <code style="font-family: var(--font-mono); font-size: var(--text-sm)">.mcp.json</code> → Start MCP servers as subprocesses → Discover tools via MCP protocol → Register with DeepAgents</p>
+        </div>
+        <div class="pattern-card animate-in" style="--stagger-index: 1; border-top: 3px solid var(--color-actor-5)">
+          <div class="pattern-icon" style="background: var(--color-actor-5)">🏝️</div>
+          <h4 class="pattern-title">Sandbox Isolation</h4>
+          <p class="pattern-desc">All file/shell operations contained in sandbox directory → Path traversal blocked → Host system protected</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">The Model Context Protocol (MCP)</h2>
+      <p style="margin-bottom: var(--space-6);"><span class="term" data-definition="Model Context Protocol (MCP) is an open protocol that standardizes how applications provide context to LLMs — like a USB-C port for AI applications.">MCP</span> allows the agent to connect to external tool servers. Each server provides tools, resources, and prompts via a standardized protocol.</p>
+
+      <div class="code-block animate-in" style="margin-bottom: var(--space-6);">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-filename">.mcp.json</span>
+        </div>
+        <div class="code-content">
+<pre style="margin: 0;"><code style="font-family: var(--font-mono); font-size: var(--text-sm);">{
+  <span style="color: var(--color-code-string)">"servers"</span>: {
+    <span style="color: var(--color-code-string)">"fetch"</span>: {
+      <span style="color: var(--color-code-string)">"command"</span>: <span style="color: var(--color-code-string-literal)">"uvx"</span>,
+      <span style="color: var(--color-code-string)">"args"</span>: [<span style="color: var(--color-code-string-literal)">"mcp-server-fetch"</span>]
+    },
+    <span style="color: var(--color-code-string)">"filesystem"</span>: {
+      <span style="color: var(--color-code-string)">"command"</span>: <span style="color: var(--color-code-string-literal)">"npx"</span>,
+      <span style="color: var(--color-code-string)">"args"</span>: [<span style="color: var(--color-code-string-literal)">"-y"</span>, <span style="color: var(--color-code-string-literal)">"@modelcontextprotocol/server-filesystem"</span>, <span style="color: var(--color-code-string-literal)">"/allowed/path"</span>]
+    }
+  }
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="callout callout-success" style="margin-bottom: var(--space-6)">
+        <div class="callout-icon">🔄</div>
+        <div class="callout-content">
+          <strong class="callout-title">MCP Tool Flow</strong>
+          <p>User has <code style="font-family: var(--font-mono); font-size: var(--text-sm)">.mcp.json</code> → MCPToolManager parses config → Starts servers via stdio → Discovers tools via MCP protocol → Converts to LangChain tools → Registers with <code style="font-family: var(--font-mono); font-size: var(--text-sm)">create_deep_agent(tools=...)</code> → Agent can call MCP tools like native tools</p>
+        </div>
+      </div>
+
+      <p style="margin-bottom: var(--space-6);">MCP tools integrate seamlessly with Phase 8's HITL system — they can be configured to require approval just like native tools.</p>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">MCP Tools Panel</h2>
+      <p style="margin-bottom: var(--space-6);">The TUI provides a sidebar panel for monitoring MCP servers and their tools:</p>
+
+      <div class="code-block animate-in" style="margin-bottom: var(--space-6); background: var(--color-surface);">
+        <div style="padding: var(--space-6); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.8;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-4);">
+            <span style="font-weight: bold;">MCP Tools</span>
+            <span><span style="color: var(--color-text-muted);">[Refresh] [×]</span></span>
+          </div>
+          <div style="color: var(--color-text-muted); margin: var(--space-4) 0;">────────────────────────────</div>
+          <div style="margin-bottom: var(--space-2);"><span style="color: var(--color-success);">●</span> fetch-server (3 tools)</div>
+          <div style="margin-left: var(--space-4); color: var(--color-text-muted);">- fetch_url</div>
+          <div style="margin-left: var(--space-4); color: var(--color-text-muted);">- fetch_html</div>
+          <div style="margin-left: var(--space-4); color: var(--color-text-muted); margin-bottom: var(--space-4);">- extract_content</div>
+          <div style="margin-bottom: var(--space-2);"><span style="color: var(--color-success);">●</span> filesystem-server (4 tools)</div>
+          <div style="margin-left: var(--space-4); color: var(--color-text-muted);">- read_file</div>
+          <div style="margin-left: var(--space-4); color: var(--color-text-muted);">- write_file</div>
+          <div style="margin-left: var(--space-4); color: var(--color-text-muted);">- list_directory</div>
+          <div style="margin-left: var(--space-4); color: var(--color-text-muted);">- search_files</div>
+        </div>
+      </div>
+
+      <p style="margin-bottom: var(--space-6);">The panel uses Textual's <span class="term" data-definition="Reactive data in Textual automatically triggers UI updates when the underlying data changes.">reactive data binding</span> to update in real-time as server status changes.</p>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Sandbox Isolation</h2>
+      <p style="margin-bottom: var(--space-6);">The <span class="term" data-definition="SandboxBackend provides isolated execution where all file and shell operations are contained within a sandbox directory.">SandboxBackend</span> ensures all agent operations stay within a designated directory, protecting the host system.</p>
+
+      <div class="code-block animate-in" style="margin-bottom: var(--space-6);">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-filename">services/deep_agents/sandbox.py</span>
+        </div>
+        <div class="code-content">
+<pre style="margin: 0;"><code style="font-family: var(--font-mono); font-size: var(--text-sm);"><span style="color: var(--color-code-keyword)">def</span> <span style="color: var(--color-code-function)">_resolve_path</span>(<span style="color: var(--color-code-keyword)">self</span>, path: <span style="color: var(--color-code-type)">str</span>) -> Path:
+    <span style="color: var(--color-code-comment)">"""Resolve path within sandbox, blocking traversal attacks."""</span>
+    <span style="color: var(--color-code-comment)"># Handle absolute paths by stripping leading /</span>
+    <span style="color: var(--color-code-keyword)">if</span> path.startswith(<span style="color: var(--color-code-string-literal)">"/"</span>):
+        path = path[<span style="color: var(--color-code-number)">1</span>:]
+    
+    <span style="color: var(--color-code-comment)"># Resolve relative to sandbox root</span>
+    target = (<span style="color: var(--color-code-keyword)">self</span>.root_dir / path).resolve()
+    
+    <span style="color: var(--color-code-comment)"># Security check: ensure resolved path is within sandbox</span>
+    <span style="color: var(--color-code-keyword)">try</span>:
+        target.relative_to(<span style="color: var(--color-code-keyword)">self</span>.root_dir.resolve())
+    <span style="color: var(--color-code-keyword)">except</span> ValueError:
+        <span style="color: var(--color-code-keyword)">raise</span> ValueError(<span style="color: var(--color-code-string)">f"Path '{path}' attempts to escape sandbox"</span>)
+    
+    <span style="color: var(--color-code-keyword)">return</span> target</code></pre>
+        </div>
+      </div>
+
+      <div class="comparison-table" style="margin-bottom: var(--space-6);">
+        <table>
+          <thead>
+            <tr>
+              <th>Path Requested</th>
+              <th>Resolved To</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/etc/passwd</code></td>
+              <td><code>sandbox/etc/passwd</code></td>
+              <td><span style="color: var(--color-success)">✓ Contained</span></td>
+            </tr>
+            <tr>
+              <td><code>../../../etc/passwd</code></td>
+              <td>—</td>
+              <td><span style="color: var(--color-error)">✗ Blocked (traversal)</span></td>
+            </tr>
+            <tr>
+              <td><code>../secret.txt</code></td>
+              <td>—</td>
+              <td><span style="color: var(--color-error)">✗ Blocked (escape attempt)</span></td>
+            </tr>
+            <tr>
+              <td><code>project/src/main.py</code></td>
+              <td><code>sandbox/project/src/main.py</code></td>
+              <td><span style="color: var(--color-success)">✓ Contained</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-error" style="margin-bottom: var(--space-6)">
+        <div class="callout-icon">🛡️</div>
+        <div class="callout-content">
+          <strong class="callout-title">Path Traversal Protection</strong>
+          <p>The <code style="font-family: var(--font-mono); font-size: var(--text-sm)">_resolve_path()</code> method uses <code style="font-family: var(--font-mono); font-size: var(--text-sm)">Path.resolve()</code> to normalize paths and <code style="font-family: var(--font-mono); font-size: var(--text-sm)">relative_to()</code> to verify the resolved path is within the sandbox root. Any attempt to escape (via <code style="font-family: var(--font-mono); font-size: var(--text-sm)">../</code> or absolute paths) raises <code style="font-family: var(--font-mono); font-size: var(--text-sm)">ValueError</code>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Sandbox vs Host Execution</h2>
+      <p style="margin-bottom: var(--space-6);">The TUI can use either sandboxed or direct host execution:</p>
+
+      <div class="comparison-table" style="margin-bottom: var(--space-8);">
+        <table>
+          <thead>
+            <tr>
+              <th>Backend</th>
+              <th>Use Case</th>
+              <th>Isolation</th>
+              <th>Persistence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>LocalShellBackend</strong></td>
+              <td>Direct host access</td>
+              <td>None (virtual_mode=True for paths)</td>
+              <td>Files persist in cwd</td>
+            </tr>
+            <tr>
+              <td><strong>SandboxBackend</strong></td>
+              <td>Isolated execution</td>
+              <td>Full (directory-based sandbox)</td>
+              <td>Files in .agent-sandbox/</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">When to use each backend</strong>
+          <p>Use <strong>LocalShellBackend</strong> for trusted environments where the agent needs full project access. Use <strong>SandboxBackend</strong> when running untrusted code, testing, or when you want to isolate agent operations. Both respect the <code style="font-family: var(--font-mono); font-size: var(--text-sm)">cleanup</code> flag — set to <code style="font-family: var(--font-mono); font-size: var(--text-sm)">True</code> to auto-remove sandbox on exit, <code style="font-family: var(--font-mono); font-size: var(--text-sm)">False</code> to inspect results.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Quiz: MCP &amp; Sandboxes</h2>
+      <div class="quiz-container" id="quiz-11">
+        <div class="quiz-question-block" data-question="q1" data-correct="option-b">
+          <h3 class="quiz-question">A user has this <code style="font-family: var(--font-mono)">.mcp.json</code>: <code style="font-family: var(--font-mono)">{"servers": {"calc": {"command": "python", "args": ["calc_server.py"]}}}</code>. The server provides a tool called "calculate". How does the TUI access it?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Direct import of calc_server.py as a Python module</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>MCPToolManager starts the server as a subprocess and discovers tools via MCP protocol</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>The TUI reads the JSON and creates a mock tool that doesn't actually execute</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q1-feedback-11"></div>
+        </div>
+        <div class="quiz-question-block" data-question="q2" data-correct="option-a">
+          <h3 class="quiz-question">An agent in a SandboxBackend tries to write to <code style="font-family: var(--font-mono)">../../../etc/passwd</code>. What happens?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>ValueError is raised: "Path attempts to escape sandbox"</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>The file is written to /etc/passwd on the host system</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>The path is normalized and written to sandbox/etc/passwd</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q2-feedback-11"></div>
+        </div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-11')">Check Answers</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-11')">Try Again</button>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
       <div class="callout callout-accent">
         <div class="callout-icon">🎓</div>
         <div class="callout-content">
           <strong class="callout-title">You've completed the full course!</strong>
-          <p>From the approval system to web search, subagent delegation, context management, and persistent memory — you now understand how agent-tui extends a basic TUI into a full agent interface. The patterns repeat: intercept special tool names early, emit semantic events, keep the UI layer thin. Build on these three rules and you can add any capability.</p>
+          <p>From the approval system to web search, subagent delegation, context management, persistent memory, Human-in-the-Loop interrupts, MCP integration, and sandbox isolation — you now understand how agent-tui extends a basic TUI into a full agent interface. The patterns repeat: intercept special tool names early, emit semantic events, keep the UI layer thin. Build on these three rules and you can add any capability.</p>
         </div>
       </div>
     </div>
