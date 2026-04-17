@@ -1,0 +1,284 @@
+docs/superpowers/specs/2026-04-17-right-sidebar-design.md
+  b5636e856c0ebd66 1-147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "1b5b60f96092cf765759a2a4f9a48567d7292e2b",
+  "prompts": {
+    "b5636e856c0ebd66": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2636df63cffeTd0E2xe2PyCmuR",
+        "model": "opencode-go/minimax-m2.7"
+      },
+      "human_author": "Shahriyar Rzayev",
+      "messages": [
+        {
+          "type": "user",
+          "text": "brainstorming I would like to have a right pane(panel) in the TUI.\nThis should be similar to the OpenCode right pane. It should show the context section with tokens count and used percentage. It should have Activated MCP list. Modified Files showing edited,changed, created files during the session. For more info see the provided print screen from OpenCode session.  \n[Image 1]",
+          "timestamp": "2026-04-17T17:51:49.721+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "skill",
+          "input": {
+            "name": "brainstorming"
+          },
+          "timestamp": "2026-04-17T17:51:49.739+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll help you design a right pane for your TUI. Let me first explore the project context to understand the current structure.",
+          "timestamp": "2026-04-17T17:51:52.094+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob",
+          "input": {
+            "pattern": "**/*.{ts,tsx,rs}"
+          },
+          "timestamp": "2026-04-17T17:51:52.094+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui"
+          },
+          "timestamp": "2026-04-17T17:51:52.094+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src"
+          },
+          "timestamp": "2026-04-17T17:51:54.424+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob",
+          "input": {
+            "pattern": "src/**/*.py"
+          },
+          "timestamp": "2026-04-17T17:51:54.424+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/ui.py"
+          },
+          "timestamp": "2026-04-17T17:51:56.082+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.py"
+          },
+          "timestamp": "2026-04-17T17:51:56.082+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob",
+          "input": {
+            "pattern": "**/*.tcss"
+          },
+          "timestamp": "2026-04-17T17:51:57.610+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/domain/session_stats.py"
+          },
+          "timestamp": "2026-04-17T17:51:57.610+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/widgets/status.py"
+          },
+          "timestamp": "2026-04-17T17:51:57.610+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/widgets/mcp_panel.py"
+          },
+          "timestamp": "2026-04-17T17:52:00.214+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/app.tcss"
+          },
+          "timestamp": "2026-04-17T17:52:00.214+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "I've explored the project context. This is a Textual-based TUI application with:\n- A main chat interface in `app.py`\n- Existing `MCPPanel` widget for MCP tools\n- `SessionStats` and `StatusBar` for token tracking\n- CSS styling in `app.tcss`\n\nSince you mentioned OpenCode's right pane and I cannot view the screenshot, let me ask some clarifying questions to understand the design:\n\n---\n\n**Some upcoming questions may be easier to understand with a visual.** I can put together mockups, diagrams, or comparisons in a web browser as we go. This feature is still new and can be token-intensive. Want to try it? (Requires opening a local URL)",
+          "timestamp": "2026-04-17T17:52:01.966+00:00"
+        },
+        {
+          "type": "user",
+          "text": "Yes",
+          "timestamp": "2026-04-17T17:53:31.644+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/.config/opencode/skills/superpowers/brainstorming/visual-companion.md"
+          },
+          "timestamp": "2026-04-17T17:53:31.654+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "bash /home/shako/.config/opencode/skills/superpowers/brainstorming/scripts/start-server.sh --project-dir /home/shako/REPOS/Indie-Hacking/agent-tui",
+            "description": "Start visual companion server"
+          },
+          "timestamp": "2026-04-17T17:53:36.341+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "write",
+          "input": {
+            "content": "<h2>Right Pane Concept</h2>\n<p class=\"subtitle\">Proposed \"OpenCode-style\" info panel on the right side</p>\n\n<div class=\"mockup\">\n  <div class=\"mockup-header\">Preview: Right Pane</div>\n  <div class=\"mockup-body\" style=\"display: flex; gap: 4px; height: 400px;\">\n    <div style=\"flex: 1; background: var(--bg); padding: 8px; font-size: 11px; color: var(--muted)\">\n      Main Chat Area<br/>\n      (existing UI)\n    </div>\n    <div style=\"width: 280px; background: var(--surface); border-left: 1px solid var(--primary); padding: 8px; display: flex; flex-direction: column; gap: 12px;\">\n      <div class=\"section\">\n        <div class=\"label\">Context</div>\n        <div style=\"font-size: 12px; padding: 6px 8px; background: var(--bg); border-radius: 4px;\">\n          <div style=\"margin-bottom: 4px;\">Token Usage</div>\n          <div style=\"display: flex; justify-content: space-between; color: var(--primary)\">\n            <span>8.2K</span>\n            <span>45%</span>\n          </div>\n          <div style=\"height: 4px; background: var(--bg); border-radius: 2px; margin-top: 4px;\">\n            <div style=\"width: 45%; height: 100%; background: var(--primary); border-radius: 2px;\"></div>\n          </div>\n        </div>\n      </div>\n      <div class=\"section\">\n        <div class=\"label\">Activated MCP</div>\n        <div style=\"font-size: 11px;\">\n          <div style=\"color: var(--success); margin-bottom: 2px;\">● filesystem</div>\n          <div style=\"color: var(--success); margin-bottom: 2px;\">● github</div>\n          <div style=\"color: var(--error); opacity: 0.6;\">○ memory (offline)</div>\n        </div>\n      </div>\n      <div class=\"section\">\n        <div class=\"label\">Modified Files</div>\n        <div style=\"font-size: 11px; max-height: 200px; overflow-y: auto;\">\n          <div style=\"color: var(--success); margin-bottom: 2px;\">+ src/new.py</div>\n          <div style=\"color: var(--warning); margin-bottom: 2px;\">~ src/existing.rs</div>\n          <div style=\"color: var(--muted); margin-bottom: 2px;\">• README.md</div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<div class=\"options\" style=\"margin-top: 20px;\">\n  <div class=\"option\" data-choice=\"toggle\" onclick=\"toggleSelect(this)\">\n    <div class=\"letter\">A</div>\n    <div class=\"content\">\n      <h3>Toggle with Ctrl+M</h3>\n      <p>Use existing MCP panel shortcut, expand it to show context stats and modified files</p>\n    </div>\n  </div>\n  <div class=\"option\" data-choice=\"sidebar\" onclick=\"toggleSelect(this)\">\n    <div class=\"letter\">B</div>\n    <div class=\"content\">\n      <h3>Persistent Right Sidebar</h3>\n      <p>Always visible, can be resized, shows tokens/MCP/files in compact form</p>\n    </div>\n  </div>\n  <div class=\"option\" data-choice=\"both\" onclick=\"toggleSelect(this)\">\n    <div class=\"letter\">C</div>\n    <div class=\"content\">\n      <h3>Hybrid Approach</h3>\n      <p>Compact always-visible strip + expandable detail panel on click</p>\n    </div>\n  </div>\n</div>\n\n<div style=\"margin-top: 16px; color: var(--muted); font-size: 12px;\">\n  <p>Note: Since I can't view your screenshot, I'm inferring the OpenCode-style panel from your description. Does this match what you had in mind, or do you want me to adjust the layout?</p>\n</div>",
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/.superpowers/brainstorm/775443-1776448418/right-pane-v1.html"
+          },
+          "timestamp": "2026-04-17T17:53:40.655+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "I've started the visual companion and created an initial mockup.\n\n**Open this URL in your browser:** http://localhost:64614\n\n**What's on screen:** A mockup showing three possible approaches:\n- **A** - Expand existing Ctrl+M panel to include context stats + modified files\n- **B** - Persistent always-visible sidebar (resizable)\n- **C** - Hybrid: compact strip + expandable detail panel\n\nSince I can't view your screenshot, I've made assumptions about what the OpenCode right pane looks like based on your description (tokens, MCP list, modified files). \n\n**Does this match what you had in mind, or should I adjust the layout?** Click an option in the browser or respond in the terminal.",
+          "timestamp": "2026-04-17T17:53:51.328+00:00"
+        },
+        {
+          "type": "user",
+          "text": "Okay I choose B",
+          "timestamp": "2026-04-17T17:55:07.219+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "Great! A persistent right sidebar. Let me ask a few questions to refine the design:\n\n**1. Default width for the sidebar?** (This will be the starting width before resizing)\n\n- **Narrow (200px)** - Compact, shows essential info only\n- **Medium (280px)** - Good balance, room for more detail\n- **Wide (350px)** - More breathing room, better for file paths\n\n**2. Should the sidebar be hideable?**\n\n- **Yes** - Toggle on/off (could reuse Ctrl+M or a new shortcut)\n- **No** - Always visible, you close it by resizing to 0\n\n**3. For \"Modified Files\" - how should files be tracked?**\n\n- **Automatic** - Track file changes from tool calls (Edit, Write, Create tools)\n- **Manual** - User adds files to track manually via a command\n- **Agent-reported** - The agent backend reports what files changed\n\nPlease answer in the terminal.",
+          "timestamp": "2026-04-17T17:55:07.227+00:00"
+        },
+        {
+          "type": "user",
+          "text": "1. Narrow\n2. Yes\n3. Automatic",
+          "timestamp": "2026-04-17T17:56:28.336+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "write",
+          "input": {
+            "content": "<h2>Refined Layout</h2>\n<p class=\"subtitle\">Narrow (200px), toggleable, automatic file tracking</p>\n\n<div class=\"mockup\">\n  <div class=\"mockup-header\">Preview: Narrow Right Sidebar</div>\n  <div class=\"mockup-body\" style=\"display: flex; height: 450px;\">\n    <div style=\"flex: 1; background: var(--bg); padding: 8px; font-size: 11px; color: var(--muted)\">\n      Main Chat Area<br/>\n      (existing UI)\n    </div>\n    <div style=\"width: 200px; background: var(--surface); border-left: 1px solid var(--primary); padding: 8px; display: flex; flex-direction: column; gap: 10px; font-size: 11px;\">\n      <div style=\"text-align: center; color: var(--muted); font-size: 10px; margin-bottom: 4px;\">\n        Ctrl+M to toggle\n      </div>\n\n      <div class=\"section\">\n        <div class=\"label\" style=\"margin-bottom: 4px;\">Context</div>\n        <div style=\"background: var(--bg); padding: 6px 8px; border-radius: 4px;\">\n          <div style=\"display: flex; justify-content: space-between;\">\n            <span style=\"color: var(--primary)\">8.2K</span>\n            <span style=\"color: var(--muted)\">45%</span>\n          </div>\n          <div style=\"height: 3px; background: var(--surface-darken); border-radius: 2px; margin-top: 4px;\">\n            <div style=\"width: 45%; height: 100%; background: var(--primary); border-radius: 2px;\"></div>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"section\">\n        <div class=\"label\" style=\"margin-bottom: 4px;\">Activated MCP</div>\n        <div style=\"max-height: 120px; overflow-y: auto;\">\n          <div style=\"color: var(--success); margin-bottom: 2px;\">● filesystem</div>\n          <div style=\"color: var(--success); margin-bottom: 2px;\">● github</div>\n          <div style=\"color: var(--muted); margin-bottom: 2px; opacity: 0.7;\">○ memory</div>\n        </div>\n      </div>\n\n      <div class=\"section\" style=\"flex: 1; overflow: hidden;\">\n        <div class=\"label\" style=\"margin-bottom: 4px;\">Modified Files</div>\n        <div style=\"max-height: 180px; overflow-y: auto;\">\n          <div style=\"color: var(--success);\">+ new.py</div>\n          <div style=\"color: var(--warning);\">~ existing.rs</div>\n          <div style=\"color: var(--muted);\">• README.md</div>\n          <div style=\"color: var(--success);\">+ src/foo/bar.py</div>\n          <div style=\"color: var(--warning);\">~ src/utils.py</div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<div class=\"pros-cons\" style=\"margin-top: 16px;\">\n  <div class=\"pros\">\n    <h4>Pro</h4>\n    <ul>\n      <li>Always visible context - no need to toggle to check tokens</li>\n      <li>Clean separation from main chat</li>\n      <li>Narrow footprint - doesn't steal much screen space</li>\n      <li>Resizable if user wants more room later</li>\n    </ul>\n  </div>\n  <div class=\"cons\">\n    <h4>Considerations</h4>\n    <ul>\n      <li>Limited space for long file paths (may need truncation)</li>\n      <li>Need to decide what happens on small terminals (&lt;80 cols)</li>\n    </ul>\n  </div>\n</div>\n\n<p style=\"margin-top: 12px; color: var(--muted); font-size: 12px;\">\n  Questions:<br/>\n  1. Should the sidebar hide automatically on narrow terminals?<br/>\n  2. Any other sections to add? (e.g., session duration, request count)\n</p>",
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/.superpowers/brainstorm/775443-1776448418/layout-v2.html"
+          },
+          "timestamp": "2026-04-17T17:56:28.344+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "**Updated mockup:** http://localhost:64614\n\n**Layout:** Narrow 200px sidebar with Context, MCP, and Modified Files sections.\n\n**Considerations shown:**\n- Long file paths may need truncation\n- Narrow terminals (&lt;80 cols) need handling\n\n**Please answer in the terminal:**\n1. Should the sidebar auto-hide on narrow terminals (&lt;80 cols)?\n2. Any additional sections to add? (session duration, request count, etc.)",
+          "timestamp": "2026-04-17T17:56:39.784+00:00"
+        },
+        {
+          "type": "user",
+          "text": "1. Yes\n2. At the very bottom show the active project and branch. Example: ~/REPOS/Indie-Hacking/agent-tui:main. Also show the CLI name and current version.\n\nImportant: there must be also a clear visual speration between left and right panes",
+          "timestamp": "2026-04-17T17:59:24.364+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "write",
+          "input": {
+            "content": "<h2>Final Layout</h2>\n<p class=\"subtitle\">Narrow (200px), toggleable, auto-hide on narrow terminals, clear separation</p>\n\n<div class=\"mockup\">\n  <div class=\"mockup-header\">Preview: Right Sidebar with Bottom Info</div>\n  <div class=\"mockup-body\" style=\"display: flex; height: 480px;\">\n    <div style=\"flex: 1; background: var(--bg); padding: 8px; font-size: 11px; color: var(--muted)\">\n      Main Chat Area\n    </div>\n    <div style=\"width: 200px; background: var(--surface); border-left: 3px solid var(--primary); padding: 8px; display: flex; flex-direction: column; gap: 10px; font-size: 11px;\">\n      <div style=\"text-align: center; color: var(--muted); font-size: 10px; margin-bottom: 4px;\">\n        Ctrl+M toggle\n      </div>\n\n      <div class=\"section\">\n        <div class=\"label\" style=\"margin-bottom: 4px;\">Context</div>\n        <div style=\"background: var(--bg); padding: 6px 8px; border-radius: 4px;\">\n          <div style=\"display: flex; justify-content: space-between;\">\n            <span style=\"color: var(--primary)\">8.2K</span>\n            <span style=\"color: var(--muted)\">45%</span>\n          </div>\n          <div style=\"height: 3px; background: var(--surface-darken); border-radius: 2px; margin-top: 4px;\">\n            <div style=\"width: 45%; height: 100%; background: var(--primary); border-radius: 2px;\"></div>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"section\">\n        <div class=\"label\" style=\"margin-bottom: 4px;\">Activated MCP</div>\n        <div style=\"max-height: 100px; overflow-y: auto;\">\n          <div style=\"color: var(--success); margin-bottom: 2px;\">● filesystem</div>\n          <div style=\"color: var(--success); margin-bottom: 2px;\">● github</div>\n          <div style=\"color: var(--muted); opacity: 0.7;\">○ memory</div>\n        </div>\n      </div>\n\n      <div class=\"section\" style=\"flex: 1; overflow: hidden;\">\n        <div class=\"label\" style=\"margin-bottom: 4px;\">Modified Files</div>\n        <div style=\"max-height: 160px; overflow-y: auto;\">\n          <div style=\"color: var(--success);\">+ new.py</div>\n          <div style=\"color: var(--warning);\">~ existing.rs</div>\n          <div style=\"color: var(--muted);\">• README.md</div>\n          <div style=\"color: var(--success);\">+ src/foo/bar.py</div>\n          <div style=\"color: var(--warning);\">~ src/utils.py</div>\n        </div>\n      </div>\n\n      <div style=\"border-top: 1px solid var(--primary-darken); padding-top: 6px; margin-top: auto;\">\n        <div style=\"color: var(--muted); font-size: 10px; word-break: break-all;\">~/REPOS/Indie-Hacking/agent-tui:main</div>\n        <div style=\"color: var(--muted); font-size: 10px; margin-top: 2px;\">agent-tui v1.2.3</div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<div class=\"pros-cons\" style=\"margin-top: 16px;\">\n  <div class=\"pros\">\n    <h4>Design Decisions</h4>\n    <ul>\n      <li><strong>3px border</strong> for clear visual separation (thicker than typical 1px)</li>\n      <li><strong>Bottom section</strong> shows project/branch and version with subtle border-top separator</li>\n      <li><strong>Auto-hide</strong> on terminals &lt;80 columns</li>\n    </ul>\n  </div>\n  <div class=\"cons\">\n    <h4>To Clarify</h4>\n    <ul>\n      <li>Should project path use <code>~</code> for home directory?</li>\n      <li>Branch shown with colon prefix (<code>:main</code>) - acceptable?</li>\n    </ul>\n  </div>\n</div>\n\n<div class=\"options\" style=\"margin-top: 12px;\">\n  <div class=\"option\" data-choice=\"good\" onclick=\"toggleSelect(this)\">\n    <div class=\"letter\">✓</div>\n    <div class=\"content\">\n      <h3>This looks good</h3>\n      <p>Ready to write the design spec</p>\n    </div>\n  </div>\n  <div class=\"option\" data-choice=\"adjust\" onclick=\"toggleSelect(this)\">\n    <div class=\"letter\">~</div>\n    <div class=\"content\">\n      <h3>Make some adjustments</h3>\n      <p>I want to change something</p>\n    </div>\n  </div>\n</div>",
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/.superpowers/brainstorm/775443-1776448418/layout-v3.html"
+          },
+          "timestamp": "2026-04-17T17:59:24.371+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "**Updated mockup:** http://localhost:64614\n\n**Key changes:**\n- **3px border** for clear visual separation (left pane vs right pane)\n- **Bottom section** with project/branch and CLI version\n- Subtle border-top separator between Modified Files and bottom info\n\n**Clarifications:**\n- Project path uses `~` for home directory (e.g., `~/REPOS/...:main`)\n- Branch shown with colon prefix - acceptable?\n\n**Click an option or respond in terminal if you want adjustments.** Otherwise I'll proceed to write the design spec.",
+          "timestamp": "2026-04-17T17:59:33.996+00:00"
+        },
+        {
+          "type": "user",
+          "text": "Can't see the visual separation between left and right side of the visual. There must be a visible border between left side and right side.",
+          "timestamp": "2026-04-17T18:00:48.739+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "write",
+          "input": {
+            "content": "<h2>Layout with Clear Border Separation</h2>\n<p class=\"subtitle\">Thick 4px border with high contrast to clearly separate left and right panes</p>\n\n<div style=\"background: #1a1a2e; padding: 20px; border-radius: 8px; display: flex; gap: 0; height: 400px;\">\n  <div style=\"flex: 1; background: #0f0f1a; padding: 12px; color: #888; font-family: monospace; font-size: 12px;\">\n    Main Chat Area<br/>\n    (left pane)\n  </div>\n  <div style=\"width: 200px; background: #16162a; border-left: 4px solid #4a9eff; padding: 12px; display: flex; flex-direction: column; gap: 12px; font-size: 11px; color: #ccc;\">\n    <div style=\"text-align: center; color: #666; font-size: 10px; margin-bottom: 4px;\">\n      Ctrl+M toggle\n    </div>\n\n    <div>\n      <div style=\"color: #888; font-size: 10px; margin-bottom: 4px;\">Context</div>\n      <div style=\"background: #0f0f1a; padding: 6px 8px; border-radius: 4px;\">\n        <div style=\"display: flex; justify-content: space-between;\">\n          <span style=\"color: #4a9eff;\">8.2K</span>\n          <span style=\"color: #666;\">45%</span>\n        </div>\n        <div style=\"height: 3px; background: #333; border-radius: 2px; margin-top: 4px;\">\n          <div style=\"width: 45%; height: 100%; background: #4a9eff; border-radius: 2px;\"></div>\n        </div>\n      </div>\n    </div>\n\n    <div>\n      <div style=\"color: #888; font-size: 10px; margin-bottom: 4px;\">Activated MCP</div>\n      <div style=\"max-height: 80px; overflow-y: auto;\">\n        <div style=\"color: #4ade80; margin-bottom: 2px;\">● filesystem</div>\n        <div style=\"color: #4ade80; margin-bottom: 2px;\">● github</div>\n        <div style=\"color: #666;\">○ memory</div>\n      </div>\n    </div>\n\n    <div style=\"flex: 1; overflow: hidden;\">\n      <div style=\"color: #888; font-size: 10px; margin-bottom: 4px;\">Modified Files</div>\n      <div style=\"max-height: 120px; overflow-y: auto;\">\n        <div style=\"color: #4ade80;\">+ new.py</div>\n        <div style=\"color: #fbbf24;\">~ existing.rs</div>\n        <div style=\"color: #888;\">• README.md</div>\n        <div style=\"color: #4ade80;\">+ src/foo/bar.py</div>\n        <div style=\"color: #fbbf24;\">~ src/utils.py</div>\n      </div>\n    </div>\n\n    <div style=\"border-top: 1px solid #333; padding-top: 8px; margin-top: auto;\">\n      <div style=\"color: #888; font-size: 10px; word-break: break-all;\">~/REPOS/agent-tui:main</div>\n      <div style=\"color: #666; font-size: 10px; margin-top: 2px;\">agent-tui v1.2.3</div>\n    </div>\n  </div>\n</div>\n\n<div style=\"background: #1a1a2e; padding: 16px; border-radius: 8px; margin-top: 16px;\">\n  <div style=\"color: #4a9eff; font-size: 14px; font-weight: bold; margin-bottom: 8px;\">↑ 4px bright blue border (--primary color) ↑</div>\n  <div style=\"color: #888; font-size: 12px;\">This border clearly separates the left chat area from the right info pane.</div>\n</div>\n\n<div class=\"options\" style=\"margin-top: 16px;\">\n  <div class=\"option\" data-choice=\"good\" onclick=\"toggleSelect(this)\">\n    <div class=\"letter\">✓</div>\n    <div class=\"content\">\n      <h3>Border is now visible</h3>\n      <p>Ready to write the design spec</p>\n    </div>\n  </div>\n  <div class=\"option\" data-choice=\"adjust\" onclick=\"toggleSelect(this)\">\n    <div class=\"letter\">~</div>\n    <div class=\"content\">\n      <h3>Still not clear</h3>\n      <p>I need further adjustments</p>\n    </div>\n  </div>\n</div>",
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/.superpowers/brainstorm/775443-1776448418/layout-v4.html"
+          },
+          "timestamp": "2026-04-17T18:00:48.762+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "**Updated mockup:** http://localhost:64614\n\nI've used high contrast colors:\n- Left pane: darker background (#0f0f1a)\n- Right pane: slightly lighter (#16162a)\n- **4px bright blue border** between them\n\nThe border should now be very visible. Click an option or let me know if you need further adjustments.",
+          "timestamp": "2026-04-17T18:01:02.707+00:00"
+        },
+        {
+          "type": "user",
+          "text": "Yes not it is visible",
+          "timestamp": "2026-04-17T18:01:34.690+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "bash /home/shako/.config/opencode/skills/superpowers/brainstorming/scripts/stop-server.sh /home/shako/REPOS/Indie-Hacking/agent-tui/.superpowers/brainstorm/775443-1776448418",
+            "description": "Stop visual companion server"
+          },
+          "timestamp": "2026-04-17T18:01:34.698+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I'll write the design spec and proceed with the workflow.",
+          "timestamp": "2026-04-17T18:01:38.514+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "mkdir -p /home/shako/REPOS/Indie-Hacking/agent-tui/docs/superpowers/specs",
+            "description": "Create specs directory"
+          },
+          "timestamp": "2026-04-17T18:01:38.514+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "write",
+          "input": {
+            "content": "# Right Sidebar Panel Design\n\n**Date:** 2026-04-17\n**Feature:** OpenCode-style right info panel\n\n---\n\n## Overview\n\nAdd a persistent right sidebar panel to the agent-tui TUI that displays:\n- Context section with token count and usage percentage\n- Activated MCP servers list\n- Modified files during the session\n- Active project path and branch\n- CLI name and version\n\n---\n\n## Design Decisions\n\n| Decision | Value |\n|----------|-------|\n| Width | 200px (narrow) |\n| Visibility | Toggleable (Ctrl+M) |\n| Auto-hide | On terminals < 80 columns |\n| File tracking | Automatic (via tool calls) |\n| Border | 4px solid $primary for clear separation |\n\n---\n\n## Layout Structure\n\n```\n┌─────────────────────────────────────┬──────────────────┐\n│                                     │ Context          │\n│                                     │ 8.2K   45%       │\n│     Main Chat Area                  │ [=======-----]   │\n│                                     │                  │\n│                                     │ Activated MCP    │\n│                                     │ ● filesystem     │\n│                                     │ ● github         │\n│                                     │ ○ memory         │\n│                                     │                  │\n│                                     │ Modified Files   │\n│                                     │ + new.py         │\n│                                     │ ~ existing.rs    │\n│                                     │ • README.md      │\n│                                     │                  │\n│                                     │──────────────────│\n│                                     │ ~/REPOS/...:main │\n│                                     │ agent-tui v1.2.3 │\n└─────────────────────────────────────┴──────────────────┘\n            ← 4px border ($primary) →\n```\n\n---\n\n## Sections\n\n### 1. Context\n- Token count (formatted: 8.2K, 1.2M, etc.)\n- Usage percentage (45%)\n- Progress bar visualization\n- Source: existing token tracking from StatusBar\n\n### 2. Activated MCP\n- List of connected MCP servers\n- Status indicator: ● connected (green), ○ disconnected (muted)\n- Shows server name only (not individual tools)\n- Source: MCPToolManager or equivalent\n\n### 3. Modified Files\n- Files created (+), modified (~), or touched (•) during session\n- Automatic tracking via tool call events (EditFile, WriteFile, etc.)\n- Scrollable if list exceeds available space\n- Color coding:\n  - `+` green: created\n  - `~` amber: modified\n  - `•` muted: touched/read\n\n### 4. Bottom Info (Footer)\n- Project path with branch: `~/REPOS/agent-tui:main`\n- Uses `~` for home directory\n- CLI name and version: `agent-tui v1.2.3`\n- Separated by 1px border-top\n\n---\n\n## Technical Approach\n\n### Widget\nCreate new `InfoPanel` widget in `entrypoints/widgets/` extending `Static`.\n\n### Layout Integration\n- Add to `app.py` `compose()` alongside existing widgets\n- Use `dock: right` to position\n- Toggle visibility via Ctrl+M binding (reuse `toggle_mcp_panel` or new)\n- Auto-hide logic on terminal resize event\n\n### File Tracking\n- Hook into existing tool call events\n- Track files from: `EditFile`, `WriteFile`, `CreateFile`, `ReadFile` tools\n- Maintain in-memory list during session\n- Clear on new session\n\n### State Management\n- Reactive properties for each section\n- Updates flow from existing app state (tokens, MCP servers, etc.)\n\n---\n\n## CSS Classes\n\n```css\nInfoPanel {\n    width: 200;\n    height: 100%;\n    dock: right;\n    background: $surface;\n    border-left: solid $primary;\n}\n\nInfoPanel .info-header { }\nInfoPanel .info-context { }\nInfoPanel .info-mcp { }\nInfoPanel .info-files { }\nInfoPanel .info-footer { }\n```\n\n---\n\n## Toggle Behavior\n\n- **Ctrl+M** toggles panel visibility\n- Panel state persists during session\n- Auto-shows when terminal width >= 80 columns on startup\n- Auto-hides when terminal shrinks below 80 columns\n\n---\n\n## Edge Cases\n\n1. **Narrow terminal (< 80 cols):** Panel hidden by default\n2. **No MCP servers:** Show \"No MCP servers\" placeholder\n3. **No modified files:** Show \"No files modified\" placeholder\n4. **Long file paths:** Truncate with ellipsis, show full path on hover\n5. **Zero tokens:** Hide context section until first token count received",
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/docs/superpowers/specs/2026-04-17-right-sidebar-design.md"
+          },
+          "timestamp": "2026-04-17T18:01:40.751+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && git add docs/superpowers/specs/2026-04-17-right-sidebar-design.md && git commit -m \"Add design spec for right sidebar panel\"",
+            "description": "Commit design spec"
+          },
+          "timestamp": "2026-04-17T18:01:49.971+00:00"
+        }
+      ],
+      "total_additions": 459,
+      "total_deletions": 0,
+      "accepted_lines": 457,
+      "overriden_lines": 0
+    }
+  }
+}
