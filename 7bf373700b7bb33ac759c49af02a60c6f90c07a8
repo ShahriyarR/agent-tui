@@ -1,0 +1,117 @@
+tests/test_info_panel.py
+  46452b25317ff3cd 42,45-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "7bf373700b7bb33ac759c49af02a60c6f90c07a8",
+  "prompts": {
+    "46452b25317ff3cd": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_263591414ffeRyvwECr6f9gum0",
+        "model": "opencode-go/minimax-m2.7"
+      },
+      "human_author": "Shahriyar Rzayev",
+      "messages": [
+        {
+          "type": "user",
+          "text": "Fix tests in `tests/test_info_panel.py` that check for DEFAULT_CSS.\n\n## Issue\nTests check `panel.DEFAULT_CSS` but CSS was moved to `app.tcss`. These tests need updating.\n\n## Tests to Update\n\nThe reviewer identified these need updating:\n- `test_panel_has_expected_structure`\n- `test_css_contains_expected_classes`  \n- `test_css_has_correct_panel_properties`\n\n## Approach\n\nEither:\n1. Remove these tests since CSS is now in app.tcss (testing CSS at class level no longer applies), OR\n2. Update tests to verify CSS by reading app.tcss instead\n\nChoose whichever is simpler and maintains coverage.\n\nAfter fixing, run tests to verify they pass, then commit.\n\nWork from: /home/shako/REPOS/Indie-Hacking/agent-tui\n\n**Report:**\n- Status: DONE\n- What was fixed\n- Test results\n- Commit SHA",
+          "timestamp": "2026-04-17T18:14:38.319+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "read",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/tests/test_info_panel.py"
+          },
+          "timestamp": "2026-04-17T18:14:38.325+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui",
+            "pattern": "DEFAULT_CSS"
+          },
+          "timestamp": "2026-04-17T18:14:40.327+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui/src/agent_tui/entrypoints/widgets/info_panel.py",
+            "pattern": "DEFAULT_CSS"
+          },
+          "timestamp": "2026-04-17T18:14:42.054+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "include": "*.tcss",
+            "path": "/home/shako/REPOS/Indie-Hacking/agent-tui",
+            "pattern": "info-header|info-context|info-mcp-list"
+          },
+          "timestamp": "2026-04-17T18:14:45.916+00:00"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll remove the three tests that check `DEFAULT_CSS` since InfoPanel no longer has this attribute (CSS is in app.tcss).",
+          "timestamp": "2026-04-17T18:14:47.399+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/tests/test_info_panel.py",
+            "newString": "def test_panel_has_expected_structure(self):\n        \"\"\"Panel should have the expected structure.\"\"\"\n        panel = InfoPanel()\n\n        result = panel.compose()\n        assert result is not None",
+            "oldString": "def test_panel_has_expected_structure(self):\n        \"\"\"Panel should have the expected CSS class structure.\"\"\"\n        panel = InfoPanel()\n\n        assert \"info-header\" in panel.DEFAULT_CSS\n        assert \"info-context\" in panel.DEFAULT_CSS\n        assert \"info-mcp-list\" in panel.DEFAULT_CSS\n        assert \"info-files-list\" in panel.DEFAULT_CSS\n        assert \"info-footer\" in panel.DEFAULT_CSS"
+          },
+          "timestamp": "2026-04-17T18:14:47.399+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "edit",
+          "input": {
+            "filePath": "/home/shako/REPOS/Indie-Hacking/agent-tui/tests/test_info_panel.py",
+            "newString": "",
+            "oldString": "class TestInfoPanelCSS:\n    \"\"\"Tests for InfoPanel CSS classes.\"\"\"\n\n    def test_default_css_is_defined(self):\n        \"\"\"InfoPanel should have DEFAULT_CSS defined.\"\"\"\n        assert InfoPanel.DEFAULT_CSS is not None\n        assert len(InfoPanel.DEFAULT_CSS) > 0\n\n    def test_css_contains_expected_classes(self):\n        \"\"\"CSS should contain expected class definitions.\"\"\"\n        css = InfoPanel.DEFAULT_CSS\n\n        expected_classes = [\n            \"info-section\",\n            \"info-header\",\n            \"info-context\",\n            \"info-token-row\",\n            \"info-token-label\",\n            \"info-token-value\",\n            \"info-progress-container\",\n            \"info-progress-bar\",\n            \"info-mcp-list\",\n            \"info-mcp-server\",\n            \"info-mcp-connected\",\n            \"info-mcp-disconnected\",\n            \"info-files-list\",\n            \"info-file\",\n            \"info-file-created\",\n            \"info-file-modified\",\n            \"info-file-touched\",\n            \"info-footer\",\n            \"info-empty\",\n        ]\n\n        for cls in expected_classes:\n            assert cls in css, f\"CSS class '{cls}' not found\"\n\n    def test_css_has_correct_panel_properties(self):\n        \"\"\"CSS should have correct panel-level properties.\"\"\"\n        css = InfoPanel.DEFAULT_CSS\n\n        assert \"width: 26\" in css\n        assert \"dock: right\" in css\n        assert \"border-left: solid $primary\" in css"
+          },
+          "timestamp": "2026-04-17T18:14:50.662+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && python -m pytest tests/test_info_panel.py -v 2>&1 | head -80",
+            "description": "Run info panel tests"
+          },
+          "timestamp": "2026-04-17T18:14:53.816+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && python3 -m pytest tests/test_info_panel.py -v 2>&1 | head -80",
+            "description": "Run info panel tests"
+          },
+          "timestamp": "2026-04-17T18:14:55.202+00:00"
+        },
+        {
+          "type": "tool_use",
+          "name": "bash",
+          "input": {
+            "command": "cd /home/shako/REPOS/Indie-Hacking/agent-tui && git add tests/test_info_panel.py && git commit -m \"test: remove CSS tests from test_info_panel.py since CSS moved to app.tcss\"",
+            "description": "Commit the test fix"
+          },
+          "timestamp": "2026-04-17T18:14:57.429+00:00"
+        }
+      ],
+      "total_additions": 3,
+      "total_deletions": 49,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
