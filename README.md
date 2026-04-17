@@ -72,6 +72,9 @@ The TUI communicates with any agent backend through `AgentProtocol` — a Python
 | **DeepAgents** | `EventTranslator`, `LangGraph`, `LocalShellBackend`, `memory.py`, `skills.py` |
 | **External** | OpenAI API, Tavily API, SQLite, `InMemoryStore`, MCP |
 
+**Features:**
+- **Phase 8 (HITL)**: Human-in-the-Loop approval system for sensitive tools (execute, write_file, edit_file, web_search, fetch_url) with interrupt/resume flow via LangGraph
+
 See `src/agent_tui/domain/protocol.py` for the `AgentProtocol` contract.
 
 ## Running Tests
