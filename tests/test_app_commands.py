@@ -21,11 +21,6 @@ class TestSkillsCommand:
             ]
         )
 
-        mounted_messages = []
-
-        async def mock_mount_message(msg):
-            mounted_messages.append(msg)
-
         # Simulate the handler logic directly
         skills = await mock_agent.get_skills()
         assert len(skills) == 2
@@ -129,8 +124,7 @@ class TestSkillsCommand:
 class TestMemoryCommand:
     """Tests for the /memory slash command handler logic."""
 
-    @pytest.mark.asyncio
-    async def test_memory_calls_get_memory_summary(self, tmp_path, monkeypatch):
+    def test_memory_calls_get_memory_summary(self, tmp_path, monkeypatch):
         """When memory files exist, get_memory_summary is called and result shown."""
         monkeypatch.chdir(tmp_path)
         (tmp_path / ".deepagents").mkdir()
@@ -142,8 +136,7 @@ class TestMemoryCommand:
         assert "Memory loaded from 1 source(s):" in summary
         assert ".deepagents/AGENTS.md (2 lines)" in summary
 
-    @pytest.mark.asyncio
-    async def test_memory_no_files_shows_no_files_message(self, tmp_path, monkeypatch):
+    def test_memory_no_files_shows_no_files_message(self, tmp_path, monkeypatch):
         """When no AGENTS.md files exist, summary says no files found."""
         monkeypatch.chdir(tmp_path)
 
@@ -152,8 +145,7 @@ class TestMemoryCommand:
         summary = get_memory_summary()
         assert "No AGENTS.md files found" in summary
 
-    @pytest.mark.asyncio
-    async def test_memory_import_error_shows_not_available(self):
+    def test_memory_import_error_shows_not_available(self):
         """When import fails, show 'Memory not available' message."""
         error_message = None
 
@@ -167,8 +159,7 @@ class TestMemoryCommand:
 
         assert error_message == "Memory not available (DeepAgents not configured)."
 
-    @pytest.mark.asyncio
-    async def test_memory_runtime_error_shows_not_available(self):
+    def test_memory_runtime_error_shows_not_available(self):
         """When get_memory_summary() raises, show 'Memory not available' message."""
         error_message = None
 
@@ -185,8 +176,7 @@ class TestMemoryCommand:
 
         assert error_message == "Memory not available (DeepAgents not configured)."
 
-    @pytest.mark.asyncio
-    async def test_memory_multiple_sources_in_summary(self, tmp_path, monkeypatch, mock_home):
+    def test_memory_multiple_sources_in_summary(self, tmp_path, monkeypatch, mock_home):
         """When multiple AGENTS.md files exist, summary mentions all sources."""
         monkeypatch.chdir(tmp_path)
         (tmp_path / ".deepagents").mkdir()

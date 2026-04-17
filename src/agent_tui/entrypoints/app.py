@@ -2515,29 +2515,18 @@ class AgentTuiApp(App):
                 await self._show_model_selector(extra_kwargs=extra_kwargs)
         elif cmd == "/skills":
             await self._mount_message(UserMessage(command))
-            skills: list[dict[str, Any]] = []
-            try:
-                if self._agent is not None and hasattr(self._agent, "get_skills"):
-                    skills = await self._agent.get_skills()
-            except Exception:
-                await self._mount_message(AppMessage("Failed to load skills."))
-                return
+            skills = self._discovered_skills
             if skills:
                 lines = [f"Available skills ({len(skills)}):"]
                 for skill in skills:
                     name = skill.get("name", "")
                     description = skill.get("description", "")
-                    if description:
-                        lines.append(f"  {name} \u2014 {description}")
-                    else:
-                        lines.append(f"  {name}")
+                    lines.append(f"  {name} \u2014 {description}" if description else f"  {name}")
                 await self._mount_message(AppMessage("\n".join(lines)))
             else:
-                await self._mount_message(
-                    AppMessage(
-                        "No skills available. Create .deepagents/skills/ directory and add .md files."
-                    )
-                )
+                await self._mount_message(AppMessage(
+                    "No skills available. Create .deepagents/skills/ directory and add .md files."
+                ))
         elif cmd == "/memory":
             await self._mount_message(UserMessage(command))
             try:
@@ -2546,7 +2535,7 @@ class AgentTuiApp(App):
                 summary = get_memory_summary()
             except Exception:
                 await self._mount_message(
-                    AppMessage("Memory not available (DeepAgents not configured).")
+                    ErrorMessage("Memory not available (DeepAgents not configured).")
                 )
                 return
             await self._mount_message(AppMessage(summary))
