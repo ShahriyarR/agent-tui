@@ -293,3 +293,78 @@ ChatTextArea {
     padding: 0;
     color: $text;
 }
+
+/* MCP Panel styling */
+MCPPanel {
+    width: 40;
+    height: 100%;
+    dock: right;
+    background: $surface;
+    border-left: solid $primary;
+    padding: 0;
+    layer: base;
+}
+
+MCPPanel .mcp-header {
+    height: 3;
+    padding: 0 1;
+    border-bottom: solid $primary-darken-2;
+}
+
+MCPPanel .mcp-title {
+    text-style: bold;
+    width: 1fr;
+    content-align-vertical: center;
+}
+
+MCPPanel .mcp-header Button {
+    width: auto;
+    margin: 0 0 0 1;
+}
+
+MCPPanel .mcp-servers {
+    height: 1fr;
+    padding: 0 1;
+    overflow-y: auto;
+}
+
+MCPPanel .mcp-server {
+    color: $primary;
+    margin: 1 0 0 0;
+    text-style: bold;
+}
+
+MCPPanel .mcp-server-connected {
+    color: $success;
+}
+
+MCPPanel .mcp-server-disconnected {
+    color: $error;
+}
+
+MCPPanel .mcp-tool {
+    color: $text-muted;
+    margin: 0 0 0 2;
+}
+
+MCPPanel .mcp-status-connected {
+    color: $success;
+}
+
+MCPPanel .mcp-status-disconnected {
+    color: $error;
+}
+
+MCPPanel .mcp-empty {
+    color: $text-muted;
+    text-style: italic;
+    text-align: center;
+    margin-top: 2;
+}
+
+MCPPanel .mcp-footer {
+    height: 1;
+    padding: 0 1;
+    border-top: solid $primary-darken-2;
+    color: $text-muted;
+}

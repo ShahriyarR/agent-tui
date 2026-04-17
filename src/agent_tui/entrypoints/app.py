@@ -61,6 +61,7 @@ from agent_tui.entrypoints.widgets.messages import (
     ToolCallMessage,
     UserMessage,
 )
+from agent_tui.entrypoints.widgets.mcp_panel import MCPPanel
 from agent_tui.entrypoints.widgets.status import StatusBar
 from agent_tui.entrypoints.widgets.welcome import WelcomeBanner
 
@@ -461,6 +462,13 @@ class AgentTuiApp(App):
             show=False,
             priority=True,
         ),
+        Binding(
+            "ctrl+m",
+            "toggle_mcp_panel",
+            "Toggle MCP Panel",
+            show=False,
+            priority=True,
+        ),
         # Approval menu keys (handled at App level for reliability)
         Binding("up", "approval_up", "Up", show=False),
         Binding("k", "approval_up", "Up", show=False),
@@ -644,6 +652,9 @@ class AgentTuiApp(App):
 
         self._startup_task: asyncio.Task[None] | None = None
         """Startup task reference (set in on_mount)."""
+
+        self._mcp_panel: MCPPanel | None = None
+        """MCP tools panel widget (shown/hidden via Ctrl+M)."""
 
         self._discovered_skills: list[ExtendedSkillMetadata] = []
         """Cached skill metadata (populated by startup discovery worker,
@@ -3610,6 +3621,30 @@ class AgentTuiApp(App):
         """Handle escape in approval menu - reject."""
         if self._pending_approval_widget:
             self._pending_approval_widget.action_select_reject()
+
+    def action_toggle_mcp_panel(self) -> None:
+        """Toggle the MCP tools panel visibility.
+
+        Creates and mounts the panel if not visible, removes it if already shown.
+        The panel displays MCP server status and their available tools.
+        """
+        # Check if panel is already mounted
+        if self._mcp_panel is not None and self._mcp_panel.is_attached:
+            self._mcp_panel.remove()
+            self._mcp_panel = None
+            return
+
+        # Import MCPToolManager and get the active manager
+        from agent_tui.services.deep_agents.mcp import _active_managers
+
+        # Get the first active manager (or None if none exists)
+        manager = None
+        if _active_managers:
+            manager = _active_managers[0]
+
+        # Create and mount the panel
+        self._mcp_panel = MCPPanel(tool_manager=manager)
+        self.mount(self._mcp_panel)
 
     async def action_open_editor(self) -> None:
         """Open the current prompt text in an external editor ($VISUAL/$EDITOR)."""
