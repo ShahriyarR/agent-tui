@@ -743,6 +743,7 @@
       <button class="nav-dot" data-target="module-7" aria-label="Module 7"></button>
       <button class="nav-dot" data-target="module-8" aria-label="Module 8"></button>
       <button class="nav-dot" data-target="module-9" aria-label="Module 9"></button>
+      <button class="nav-dot" data-target="module-10" aria-label="Module 10"></button>
     </div>
   </div>
 </nav>
@@ -1970,11 +1971,187 @@ $((1+1))
     </div>
 
     <div class="screen animate-in">
+      <div class="callout callout-info">
+        <div class="callout-icon">→</div>
+        <div class="callout-content">
+          <strong class="callout-title">One more phase to go: Memory &amp; Skills</strong>
+          <p>You've mastered context management. Next up: Phase 7 — persistent agent memory, skill discovery, and the cross-thread store that makes state survive model switches.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODULE 10: Memory & Skills ==================== -->
+<section class="module" id="module-10">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">10</span>
+      <h1 class="module-title">Memory &amp; Skills</h1>
+      <p class="module-subtitle">AGENTS.md persistence, skill discovery, and the InMemoryStore — Phase 7</p>
+    </header>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Two-level configuration hierarchy</h2>
+      <p style="margin-bottom: var(--space-6);">Phase 7 introduces two kinds of persisted data the agent can read before answering. Both follow the same <strong>user-level → project-level</strong> pattern:</p>
+      <div class="pattern-cards stagger-children">
+        <div class="pattern-card animate-in" style="--stagger-index: 0; border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">🧠</div>
+          <h4 class="pattern-title">Memory — AGENTS.md</h4>
+          <p class="pattern-desc">Markdown files the agent reads as background context. Checked at <code style="font-family: var(--font-mono); font-size: var(--text-sm)">~/.deepagents/AGENTS.md</code> (user-wide) and <code style="font-family: var(--font-mono); font-size: var(--text-sm)">.deepagents/AGENTS.md</code> (per-project). Put facts, preferences, or standing instructions here.</p>
+        </div>
+        <div class="pattern-card animate-in" style="--stagger-index: 1; border-top: 3px solid var(--color-actor-3)">
+          <div class="pattern-icon" style="background: var(--color-actor-3)">⚡</div>
+          <h4 class="pattern-title">Skills — .md files in skills/</h4>
+          <p class="pattern-desc">Reusable prompt-snippets the agent can invoke by name. Discovered in <code style="font-family: var(--font-mono); font-size: var(--text-sm)">~/.deepagents/skills/</code> and <code style="font-family: var(--font-mono); font-size: var(--text-sm)">.deepagents/skills/</code>. Each <code style="font-family: var(--font-mono); font-size: var(--text-sm)">.md</code> file = one skill, named after its stem.</p>
+        </div>
+      </div>
+      <div class="callout callout-info" style="margin-top: var(--space-6)">
+        <div class="callout-icon">📌</div>
+        <div class="callout-content">
+          <strong class="callout-title">User-level loads first</strong>
+          <p>Both <code style="font-family: var(--font-mono); font-size: var(--text-sm)">get_memory_sources()</code> and <code style="font-family: var(--font-mono); font-size: var(--text-sm)">get_skill_sources()</code> return user-level paths before project-level paths. When the same skill name appears in both, the project-level file wins — later entries in the list take precedence.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">How skills are discovered</h2>
+      <p style="margin-bottom: var(--space-6);"><code style="font-family: var(--font-mono); font-size: var(--text-sm)">list_available_skills(sources)</code> scans each directory non-recursively for <code style="font-family: var(--font-mono); font-size: var(--text-sm)">.md</code> files and extracts two fields:</p>
+      <div class="step-cards stagger-children">
+        <div class="step-card animate-in" style="--stagger-index: 0">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>name — the filename stem</strong>
+            <p><code style="font-family: var(--font-mono); font-size: var(--text-sm)">web-search.md</code> → <code style="font-family: var(--font-mono); font-size: var(--text-sm)">{"name": "web-search"}</code>. Simple, no parsing required.</p>
+          </div>
+        </div>
+        <div class="step-card animate-in" style="--stagger-index: 1">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>description — first non-heading, non-empty line</strong>
+            <p>Lines starting with <code style="font-family: var(--font-mono); font-size: var(--text-sm)">#</code> are skipped. Empty lines are skipped. The first line that survives both checks is stripped and used as the description. If the whole file is headings, description is <code style="font-family: var(--font-mono); font-size: var(--text-sm)">""</code>.</p>
+          </div>
+        </div>
+        <div class="step-card animate-in" style="--stagger-index: 2">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Sorted by name, unreadable files silently skipped</strong>
+            <p>The final list is alphabetical. <code style="font-family: var(--font-mono); font-size: var(--text-sm)">OSError</code> (permission denied, missing) and <code style="font-family: var(--font-mono); font-size: var(--text-sm)">ValueError</code> (bad encoding) are caught per-file — one bad skill doesn't break the rest.</p>
+          </div>
+        </div>
+      </div>
+      <div class="callout callout-accent" style="margin-top: var(--space-4)">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <strong class="callout-title">POSIX strings, not Path objects</strong>
+          <p>Both source functions return strings like <code style="font-family: var(--font-mono); font-size: var(--text-sm)">"~/.deepagents/skills"</code> and <code style="font-family: var(--font-mono); font-size: var(--text-sm)">".deepagents/skills"</code> — not <code style="font-family: var(--font-mono); font-size: var(--text-sm)">Path</code> objects. This keeps the display-facing keys consistent (no <code style="font-family: var(--font-mono); font-size: var(--text-sm)">./ </code> prefix) while callers use <code style="font-family: var(--font-mono); font-size: var(--text-sm)">Path(s).expanduser().resolve()</code> when they need an absolute path.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">The InMemoryStore — state that survives model switches</h2>
+      <p style="margin-bottom: var(--space-6);"><code style="font-family: var(--font-mono); font-size: var(--text-sm)">create_store()</code> in <code style="font-family: var(--font-mono); font-size: var(--text-sm)">backend.py</code> returns a LangGraph <code style="font-family: var(--font-mono); font-size: var(--text-sm)">InMemoryStore</code>. The adapter holds one instance for its entire lifetime:</p>
+      <div class="icon-rows">
+        <div class="icon-row animate-in">
+          <div class="icon-circle" style="background: var(--color-actor-2)">🔒</div>
+          <div>
+            <strong>Lazy import in <code style="font-family: var(--font-mono); font-size: var(--text-sm)">create_store()</code></strong>
+            <p>The <code style="font-family: var(--font-mono); font-size: var(--text-sm)">from langgraph.store.memory import InMemoryStore</code> lives inside the function body. DeepAgents not installed? The function is never called — no import error at startup.</p>
+          </div>
+        </div>
+        <div class="icon-row animate-in">
+          <div class="icon-circle" style="background: var(--color-actor-3)">♻️</div>
+          <div>
+            <strong><code style="font-family: var(--font-mono); font-size: var(--text-sm)">if self._store is None</code> guard</strong>
+            <p>The store is created once on the first call to <code style="font-family: var(--font-mono); font-size: var(--text-sm)">_ensure_agent()</code> and reused forever. Calling <code style="font-family: var(--font-mono); font-size: var(--text-sm)">/model</code> to switch models clears <code style="font-family: var(--font-mono); font-size: var(--text-sm)">self._agent</code> but not <code style="font-family: var(--font-mono); font-size: var(--text-sm)">self._store</code> — cross-thread state survives the switch.</p>
+          </div>
+        </div>
+        <div class="icon-row animate-in">
+          <div class="icon-circle" style="background: var(--color-success)">✓</div>
+          <div>
+            <strong>Passed to <code style="font-family: var(--font-mono); font-size: var(--text-sm)">create_deep_agent(store=…)</code></strong>
+            <p>Alongside <code style="font-family: var(--font-mono); font-size: var(--text-sm)">memory=</code> (AGENTS.md paths) and <code style="font-family: var(--font-mono); font-size: var(--text-sm)">skills=</code> (skill directory paths), the store gives the agent a place to persist structured data across conversation threads.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">The /skills and /memory commands</h2>
+      <p style="margin-bottom: var(--space-6);">Phase 7 surfaces memory and skills to the user via two slash commands:</p>
+      <div class="pattern-cards stagger-children">
+        <div class="pattern-card animate-in" style="--stagger-index: 0; border-top: 3px solid var(--color-actor-3)">
+          <div class="pattern-icon" style="background: var(--color-actor-3)">⚡</div>
+          <h4 class="pattern-title">/skills</h4>
+          <p class="pattern-desc">Reads <code style="font-family: var(--font-mono); font-size: var(--text-sm)">self._discovered_skills</code> — the merged cache already built at startup by <code style="font-family: var(--font-mono); font-size: var(--text-sm)">_discover_skills()</code>. No extra filesystem scan. Shows name and description for each skill, sorted alphabetically.</p>
+        </div>
+        <div class="pattern-card animate-in" style="--stagger-index: 1; border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">🧠</div>
+          <h4 class="pattern-title">/memory</h4>
+          <p class="pattern-desc">Calls <code style="font-family: var(--font-mono); font-size: var(--text-sm)">get_memory_summary()</code> directly — no agent needed, no async call. Returns a human-readable string listing each source file and its line count, e.g. <code style="font-family: var(--font-mono); font-size: var(--text-sm)">~/.deepagents/AGENTS.md (42 lines)</code>.</p>
+        </div>
+      </div>
+      <div class="callout callout-info" style="margin-top: var(--space-6)">
+        <div class="callout-icon">🔍</div>
+        <div class="callout-content">
+          <strong class="callout-title">/skills reads the cache, not the adapter</strong>
+          <p>Calling <code style="font-family: var(--font-mono); font-size: var(--text-sm)">self._agent.get_skills()</code> again would re-scan the filesystem and return only protocol-reported skills — missing anything found by the startup filesystem walk. Reading <code style="font-family: var(--font-mono); font-size: var(--text-sm)">self._discovered_skills</code> is both faster and complete.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Quiz: Memory &amp; Skills</h2>
+      <div class="quiz-container" id="quiz-10">
+        <div class="quiz-question-block" data-question="q1" data-correct="option-b">
+          <h3 class="quiz-question">A skills directory contains <code style="font-family: var(--font-mono)">search.md</code> with the content: <code style="font-family: var(--font-mono)"># Web Search\n\nSearch the web for current information</code>. What is the skill's description?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Web Search — the first heading line</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Search the web for current information — the first non-heading, non-empty line</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>search — the filename stem is always used as the description</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q1-feedback-10"></div>
+        </div>
+        <div class="quiz-question-block" data-question="q2" data-correct="option-a">
+          <h3 class="quiz-question">The user runs <code style="font-family: var(--font-mono)">/model anthropic:claude-sonnet-4-6</code> to switch models. What happens to the <code style="font-family: var(--font-mono)">InMemoryStore</code>?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>It is preserved — <code style="font-family: var(--font-mono)">set_model()</code> clears the agent but not the store</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>It is reset — a new store is always created with the new agent</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>It is persisted to disk and reloaded on the next run</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q2-feedback-10"></div>
+        </div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-10')">Check Answers</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-10')">Try Again</button>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
       <div class="callout callout-accent">
         <div class="callout-icon">🎓</div>
         <div class="callout-content">
           <strong class="callout-title">You've completed the full course!</strong>
-          <p>From the approval system to web search, subagent delegation, and context management — you now understand how agent-tui extends a basic TUI into a full agent interface. The patterns repeat: intercept special tool names early, emit semantic events, keep the UI layer thin. Build on these three rules and you can add any capability.</p>
+          <p>From the approval system to web search, subagent delegation, context management, and persistent memory — you now understand how agent-tui extends a basic TUI into a full agent interface. The patterns repeat: intercept special tool names early, emit semantic events, keep the UI layer thin. Build on these three rules and you can add any capability.</p>
         </div>
       </div>
     </div>
