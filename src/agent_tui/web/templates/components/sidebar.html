@@ -1,31 +1,37 @@
-<aside class="nb-sidebar w-64 h-screen flex flex-col overflow-hidden">
-    <div class="nb-sidebar-header flex-shrink-0">Projects</div>
-    <nav class="flex-shrink-0 max-h-48 overflow-y-auto">
+<aside class="nb-sidebar w-64 flex flex-col h-full">
+    <!-- Projects Section -->
+    <div class="nb-sidebar-header">Projects</div>
+    <div class="overflow-y-auto" style="max-height: 30%;">
         {% for project in projects %}
-        <div class="border-b-2 border-nb-black">
-            <a href="/project/{{ project.id }}" 
-               class="nb-sidebar-item block {% if current_project == project.id %}bg-nb-yellow{% endif %}">
-                {{ project.name }}
-            </a>
-        </div>
+        <a href="/project/{{ project.id }}" 
+           class="nb-sidebar-item block {% if current_project == project.id %}bg-nb-yellow{% endif %}">
+            {{ project.name }}
+        </a>
         {% endfor %}
-    </nav>
-    <div class="p-4 border-t-3 border-nb-black flex-shrink-0">
-        <button @click="showProjectModal = true" class="nb-btn-primary w-full">+ Add Project</button>
+    </div>
+    <div class="p-3 border-t-2 border-nb-black">
+        <button @click="showProjectModal = true" class="nb-btn-primary w-full text-sm py-2">+ Add Project</button>
     </div>
     
-    <div class="nb-sidebar-header flex-shrink-0">Chats</div>
-    <nav class="flex-1 overflow-y-auto min-h-0">
+    <!-- Chats Section -->
+    <div class="nb-sidebar-header">Chats</div>
+    <div class="flex-1 overflow-y-auto">
         {% for chat in chats %}
         <a href="/chat/{{ chat.id }}" 
-           class="nb-sidebar-item block pl-8 text-sm {% if current_chat == chat.id %}bg-nb-yellow{% endif %}">
+           class="nb-sidebar-item block pl-6 text-sm {% if current_chat == chat.id %}bg-nb-yellow{% endif %}">
             {{ chat.title }}
         </a>
         {% endfor %}
-    </nav>
+    </div>
+    
+    <!-- New Chat Button - Always at bottom -->
     {% if current_project %}
-    <div class="p-4 border-t-3 border-nb-black flex-shrink-0">
-        <button class="nb-btn w-full" hx-post="/api/projects/{{ current_project }}/chats" hx-ext="json-enc" hx-swap="none" @htmx:after-request="window.location.reload()">+ New Chat</button>
+    <div class="p-3 border-t-3 border-nb-black bg-nb-bg">
+        <button class="nb-btn w-full text-sm py-2" 
+                hx-post="/api/projects/{{ current_project }}/chats" 
+                hx-ext="json-enc" 
+                hx-swap="none" 
+                @htmx:after-request="window.location.reload()">+ New Chat</button>
     </div>
     {% endif %}
 </aside>
