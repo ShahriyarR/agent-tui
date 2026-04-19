@@ -57,3 +57,7 @@ dev = [
     "pytest>=9.0.3",
     "pytest-asyncio>=1.3.0",
 ]
+
+[tool.hatch.envs.default.scripts]
+tailwind = "npx tailwindcss -c src/agent_tui/web/tailwind.config.js -i src/agent_tui/web/static/css/app.css -o src/agent_tui/web/static/css/output.css --watch"
+tailwind-build = "npx tailwindcss -c src/agent_tui/web/tailwind.config.js -i src/agent_tui/web/static/css/app.css -o src/agent_tui/web/static/css/output.css --minify"
