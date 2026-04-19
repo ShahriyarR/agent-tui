@@ -25,9 +25,9 @@ async def index(request: Request) -> Any:
     
     if not projects:
         return templates.TemplateResponse(
+            request,
             "chat.html",
-            {
-                "request": request,
+            context={
                 "projects": [],
                 "chats": [],
                 "current_project": None,
@@ -36,12 +36,12 @@ async def index(request: Request) -> Any:
                 "empty_state": True
             }
         )
-    
+
     # Redirect to first project
     return templates.TemplateResponse(
+        request,
         "chat.html",
-        {
-            "request": request,
+        context={
             "projects": projects,
             "chats": [],
             "current_project": projects[0]["id"],
@@ -77,9 +77,9 @@ async def chat_page(chat_id: str, request: Request) -> Any:
     
     if not chat:
         return templates.TemplateResponse(
+            request,
             "chat.html",
-            {
-                "request": request,
+            context={
                 "projects": projects,
                 "chats": [],
                 "current_project": None,
@@ -88,17 +88,17 @@ async def chat_page(chat_id: str, request: Request) -> Any:
                 "error": "Chat not found"
             }
         )
-    
+
     # Get chats for this project
     chats = await store.list_chats(project_id=chat.get("project_id"))
-    
+
     # Messages would come from agent conversation history
     messages = []
-    
+
     return templates.TemplateResponse(
+        request,
         "chat.html",
-        {
-            "request": request,
+        context={
             "projects": projects,
             "chats": chats,
             "current_project": chat.get("project_id"),
