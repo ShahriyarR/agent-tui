@@ -1,0 +1,13 @@
+{% macro message(type, content, timestamp=None) -%}
+<div class="{% if type == 'user' %}nb-message-user{% else %}nb-message-assistant{% endif %}">
+    <div class="nb-message-header flex justify-between items-center">
+        <span>{% if type == 'user' %}👤 You{% else %}🤖 Assistant{% endif %}</span>
+        {% if timestamp %}
+        <span class="text-xs opacity-70">{{ timestamp }}</span>
+        {% endif %}
+    </div>
+    <div class="p-4 prose prose-sm max-w-none">
+        {{ content|safe }}
+    </div>
+</div>
+{%- endmacro %}

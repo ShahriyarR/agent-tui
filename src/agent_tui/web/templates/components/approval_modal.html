@@ -1,0 +1,20 @@
+<div x-data="approvalModal" 
+     x-show="show" 
+     x-cloak
+     class="nb-modal-overlay"
+     @keydown.escape.window="close()">
+    <div class="nb-modal" @click.away="close()">
+        <div class="border-b-3 border-nb-black bg-nb-yellow px-4 py-3 flex justify-between items-center">
+            <span class="font-bold uppercase">🔧 Tool Approval</span>
+            <button @click="close()" class="font-bold text-xl">&times;</button>
+        </div>
+        <div class="p-6">
+            <p class="mb-4">The agent wants to run: <code class="bg-gray-100 px-2 py-1 font-mono" x-text="toolName"></code></p>
+            <pre class="bg-black/5 p-3 font-mono text-sm overflow-x-auto mb-6"><code x-text="JSON.stringify(toolArgs, null, 2)"></code></pre>
+            <div class="flex gap-3 justify-end">
+                <button @click="reject()" class="nb-btn">Reject</button>
+                <button @click="approve()" class="nb-btn-primary">Approve</button>
+            </div>
+        </div>
+    </div>
+</div>

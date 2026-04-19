@@ -1,0 +1,31 @@
+<aside class="nb-sidebar w-64 h-screen flex flex-col">
+    <div class="nb-sidebar-header">Projects</div>
+    <nav class="flex-1 overflow-y-auto">
+        {% for project in projects %}
+        <div class="border-b-2 border-nb-black">
+            <a href="/chat?project={{ project.id }}" 
+               class="nb-sidebar-item block {% if current_project == project.id %}bg-nb-yellow{% endif %}">
+                {{ project.name }}
+            </a>
+        </div>
+        {% endfor %}
+    </nav>
+    <div class="p-4 border-t-3 border-nb-black">
+        <button @click="showProjectModal = true" class="nb-btn-primary w-full">+ Add Project</button>
+    </div>
+    
+    <div class="nb-sidebar-header">Chats</div>
+    <nav class="flex-1 overflow-y-auto">
+        {% for chat in chats %}
+        <a href="/chat/{{ chat.id }}" 
+           class="nb-sidebar-item block pl-8 text-sm {% if current_chat == chat.id %}bg-nb-yellow{% endif %}">
+            {{ chat.title }}
+        </a>
+        {% endfor %}
+    </nav>
+    {% if current_project %}
+    <div class="p-4 border-t-3 border-nb-black">
+        <button class="nb-btn w-full" hx-post="/api/projects/{{ current_project }}/chats" hx-swap="none">+ New Chat</button>
+    </div>
+    {% endif %}
+</aside>

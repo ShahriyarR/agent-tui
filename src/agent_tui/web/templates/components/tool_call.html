@@ -1,0 +1,15 @@
+{% macro tool_call(tool_name, tool_id, tool_args) -%}
+<div class="nb-tool-card" id="tool-{{ tool_id }}">
+    <div class="nb-tool-header flex justify-between items-center">
+        <span>🔧 {{ tool_name }}</span>
+        <code class="text-xs bg-black/20 px-2 py-1">{{ tool_id }}</code>
+    </div>
+    <div class="p-4">
+        <pre class="bg-black/5 p-3 font-mono text-sm overflow-x-auto"><code>{{ tool_args|tojson(indent=2) }}</code></pre>
+        <div class="mt-4 flex gap-3" id="tool-actions-{{ tool_id }}">
+            <button class="nb-btn-primary" onclick="approveTool('{{ tool_id }}', true)">Approve</button>
+            <button class="nb-btn" onclick="approveTool('{{ tool_id }}', false)">Reject</button>
+        </div>
+    </div>
+</div>
+{%- endmacro %}
