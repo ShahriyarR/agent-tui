@@ -7,7 +7,7 @@
             <span class="font-bold uppercase">Add New Project</span>
             <button @click="showProjectModal = false" class="font-bold text-xl">&times;</button>
         </div>
-        <form hx-post="/api/projects" hx-swap="none" @htmx:after-request="showProjectModal = false; window.location.reload()" class="p-6">
+        <form hx-post="/api/projects" hx-ext="json-enc" hx-swap="none" @htmx:after-request="showProjectModal = false; window.location.reload()" class="p-6">
             <div class="mb-4">
                 <label class="block font-bold mb-2">Project Path:</label>
                 <input type="text" name="path" class="nb-input" placeholder="/home/user/my-project" required>
