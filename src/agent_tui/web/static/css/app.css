@@ -1,0 +1,77 @@
+/* static/css/app.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .nb-card {
+    @apply border-3 border-nb-black shadow-nb bg-nb-card;
+  }
+  
+  .nb-message-user {
+    @apply border-3 border-nb-blue bg-blue-50 shadow-nb mb-4;
+  }
+  
+  .nb-message-assistant {
+    @apply border-3 border-nb-black bg-nb-card shadow-nb mb-4;
+  }
+  
+  .nb-message-header {
+    @apply border-b-3 border-nb-black bg-nb-yellow px-3 py-2 font-bold uppercase;
+  }
+  
+  .nb-tool-card {
+    @apply border-3 border-nb-pink shadow-nb-lg bg-pink-50 my-4;
+  }
+  
+  .nb-tool-header {
+    @apply bg-nb-pink text-white border-b-3 border-nb-black px-3 py-2 font-mono font-bold;
+  }
+  
+  .nb-btn {
+    @apply border-3 border-nb-black shadow-nb px-6 py-3 font-bold uppercase bg-nb-white 
+           transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 
+           hover:shadow-nb-sm active:translate-x-1 active:translate-y-1 active:shadow-none;
+  }
+  
+  .nb-btn-primary {
+    @apply nb-btn bg-nb-blue text-white;
+  }
+  
+  .nb-btn-danger {
+    @apply nb-btn bg-nb-orange text-white;
+  }
+  
+  .nb-sidebar {
+    @apply border-r-3 border-nb-black bg-nb-bg shadow-[-4px_0_0_0_#000000_inset];
+  }
+  
+  .nb-sidebar-item {
+    @apply border-b-2 border-nb-black px-4 py-4 font-bold hover:bg-nb-yellow;
+  }
+  
+  .nb-sidebar-header {
+    @apply border-b-3 border-nb-black bg-nb-black text-white px-4 py-3 font-bold uppercase;
+  }
+  
+  .nb-modal-overlay {
+    @apply fixed inset-0 bg-black/80 z-50 flex items-center justify-center;
+  }
+  
+  .nb-modal {
+    @apply border-4 border-nb-black shadow-nb-xl bg-nb-card max-w-lg w-full mx-4;
+  }
+  
+  .nb-input {
+    @apply border-3 border-nb-black shadow-nb px-4 py-3 w-full focus:outline-none 
+           focus:shadow-nb-sm focus:-translate-x-0.5 focus:-translate-y-0.5;
+  }
+  
+  .nb-status {
+    @apply border-t-3 border-nb-black bg-nb-yellow px-4 py-2 font-bold uppercase text-sm;
+  }
+  
+  .nb-token-counter {
+    @apply border-3 border-nb-black bg-nb-purple text-white px-3 py-1 font-mono text-xs;
+  }
+}
