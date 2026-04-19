@@ -36,10 +36,9 @@ def create_app() -> FastAPI:
         logger.info("Starting Agent TUI Web server")
         # Initialize session store
         from agent_tui.web.routes.api import get_session_store
-        from agent_tui.services.sessions import get_db_path
         store = get_session_store()
-        # Note: SessionStore doesn't have initialize() method in current implementation
-        # The store is initialized lazily on first use
+        await store.initialize()
+        logger.info("Session store initialized")
     
     return app
 
