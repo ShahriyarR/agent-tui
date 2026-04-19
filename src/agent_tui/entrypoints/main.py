@@ -135,6 +135,12 @@ def parse_args() -> argparse.Namespace:
         help="Agent backend to use",
     )
 
+    parser.add_argument(
+        "--web",
+        action="store_true",
+        help="Start web interface instead of TUI",
+    )
+
     return parser.parse_args()
 
 
@@ -157,6 +163,13 @@ def cli_main() -> None:
 
     try:
         _args = parse_args()
+
+        # Start web interface if requested
+        if _args.web:
+            from agent_tui.entrypoints.web import main as web_main
+
+            web_main()
+            return
 
         # Bootstrap config (triggers _ensure_bootstrap via settings access)
         from agent_tui.configurator.settings import settings  # noqa: F401
