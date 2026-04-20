@@ -8,12 +8,13 @@ from typing import Any
 from agent_tui.domain.protocol import AgentProtocol
 
 
-def create_agent(agent_type: str | None = None) -> AgentProtocol:
+def create_agent(agent_type: str | None = None, *, root_dir: str | None = None) -> AgentProtocol:
     """Create an agent based on type or environment settings.
     
     Args:
         agent_type: Either 'stub' or 'deepagents'. If None, uses environment
                    variable AGENT_TUI_WEB_AGENT or defaults to 'stub'.
+        root_dir: Root directory for file operations (used by deepagents).
     
     Returns:
         An agent implementing AgentProtocol.
@@ -33,6 +34,11 @@ def create_agent(agent_type: str | None = None) -> AgentProtocol:
         case 'deepagents':
             try:
                 from agent_tui.services.deep_agents import DeepAgentsAdapter
+                if root_dir:
+                    return DeepAgentsAdapter(
+                        model=os.environ.get('AGENT_TUI_MODEL', 'openai:gpt-4o'),
+                        root_dir=root_dir
+                    )
                 return DeepAgentsAdapter.from_settings()
             except ImportError as e:
                 raise RuntimeError(

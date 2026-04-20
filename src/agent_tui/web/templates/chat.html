@@ -11,7 +11,7 @@
         <div class="flex items-center gap-4">
             <span class="font-bold text-xl">▓▓▓ AGENT-TUI WEB ▓▓▓</span>
             {% if current_project %}
-            <select class="nb-input py-1 text-sm">
+            <select x-model="currentProject" @change="navigateToProject(currentProject)" class="nb-input py-1 text-sm">
                 {% for project in projects %}
                 <option value="{{ project.id }}" {% if project.id == current_project %}selected{% endif %}>
                     {{ project.name }}
@@ -228,4 +228,11 @@
     </div>
 </div>
 
+<script>
+// Set project context for Alpine.js component
+window.PROJECT_CONTEXT = {
+  currentProject: {{ current_project | tojson }},
+  currentChat: {{ current_chat | tojson }}
+};
+</script>
 {% endblock %}

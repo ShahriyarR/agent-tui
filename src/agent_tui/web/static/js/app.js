@@ -21,13 +21,26 @@ window.chatApp = function() {
     _messageSaved: false,
 
     init() {
+      // Use window.PROJECT_CONTEXT if available (set by template)
+      if (window.PROJECT_CONTEXT && window.PROJECT_CONTEXT.currentProject) {
+        this.currentProject = window.PROJECT_CONTEXT.currentProject;
+      }
+      
+      // Also check URL as fallback
       const match = window.location.pathname.match(/\/chat\/([^\/]+)/);
       this.currentChatId = match ? match[1] : null;
-      console.log('[APP] chatApp init, chatId:', this.currentChatId);
+      
+      const projectMatch = window.location.pathname.match(/\/project\/([^\/]+)/);
+      if (projectMatch && !this.currentProject) this.currentProject = projectMatch[1];
+      
+      console.log('[APP] chatApp init, chatId:', this.currentChatId, 'projectId:', this.currentProject);
       this.$nextTick(() => this.scrollToBottom());
       window.addEventListener('tool-call-received', (e) => {
         this.$dispatch('open-approval-modal', e.detail);
       });
+    },
+    navigateToProject(projectId) {
+      window.location.href = '/project/' + projectId;
     },
     scrollToBottom() {
       const el = document.getElementById('messages-container');
@@ -47,7 +60,12 @@ window.chatApp = function() {
       this.assistantContentBuffer = '';
       if (window.ws && window.ws.readyState === 1) {
         console.log('[CLIENT] Sending message');
-        window.ws.send(JSON.stringify({ type: 'chat', message: txt, thread_id: chatId }));
+        window.ws.send(JSON.stringify({ 
+          type: 'chat', 
+          message: txt, 
+          thread_id: chatId,
+          project_id: this.currentProject || null 
+        }));
       } else {
         this.isStreaming = false;
         this.errorMessage = 'Not connected';

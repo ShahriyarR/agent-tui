@@ -19,6 +19,11 @@
     <!-- App JS -->
     <script src="/static/js/app.js"></script>
     
+    <script>
+    // Project context - set before Alpine initializes
+    window.PROJECT_CONTEXT = window.PROJECT_CONTEXT || {};
+    </script>
+    
     {% block head %}{% endblock %}
 </head>
 <body class="h-screen overflow-hidden bg-nb-bg font-sans" x-data="{% block alpine_data %}{}{% endblock %}">

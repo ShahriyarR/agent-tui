@@ -57,6 +57,7 @@ class DeepAgentsAdapter:
         self,
         model: str = "openai:gpt-5.2",
         *,
+        root_dir: str | None = None,
         api_key: str | None = None,
         tavily_api_key: str | None = None,
     ) -> None:
@@ -64,10 +65,12 @@ class DeepAgentsAdapter:
 
         Args:
             model: The model to use for DeepAgents. Defaults to "openai:gpt-5.2".
+            root_dir: Root directory for file operations. Defaults to cwd.
             api_key: Optional OpenAI API key override.
             tavily_api_key: Optional Tavily API key override for web search.
         """
         self._model = model
+        self._root_dir = root_dir
         self._api_key = api_key
         self._tavily_api_key = tavily_api_key
         self._agent: Any = None
@@ -154,7 +157,7 @@ class DeepAgentsAdapter:
             # - File operations: read_file, write_file, edit_file, glob, grep, ls
             # - Shell execution: execute tool (shell commands)
             # Both are rooted at current working directory
-            backend = create_backend()
+            backend = create_backend(root_dir=Path(self._root_dir) if self._root_dir else None)
 
             # Web tools: web search via Tavily and URL fetching via httpx
             tools = [create_web_search_tool(), create_fetch_url_tool()]
@@ -229,7 +232,12 @@ class DeepAgentsAdapter:
 
         agent = self._ensure_agent()
 
-        config = {"configurable": {"thread_id": thread_id or "default"}}
+        config = {
+            "configurable": {
+                "thread_id": thread_id or "default",
+                "recursion_limit": 50  # Allow more steps for complex operations
+            }
+        }
 
         try:
             async for event in agent.astream_events(
@@ -266,9 +274,13 @@ class DeepAgentsAdapter:
                         await self._approval_event.wait()
                         if not self._approval_result:
                             logger.info("[ADAPTER] Tool call rejected, skipping results")
-                            # Skip subsequent results for this tool call
-                            continue
-                        logger.info("[ADAPTER] Tool call approved, will show results")
+                            # Skip remaining events for this tool call
+                            # But don't break - let the agent handle the rejection
+                            # by continuing its execution with the rejection result
+                            self._approval_result = False  # Reset for next tool
+                        else:
+                            logger.info("[ADAPTER] Tool call approved, will show results")
+                            self._approval_result = False  # Reset for next tool
                     else:
                         # Non-tool events are yielded normally
                         yield agent_event

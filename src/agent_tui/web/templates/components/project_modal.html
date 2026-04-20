@@ -10,7 +10,14 @@
         <form hx-post="/api/projects" hx-ext="json-enc" hx-swap="none" @htmx:after-request="showProjectModal = false; window.location.reload()" class="p-6">
             <div class="mb-4">
                 <label class="block font-bold mb-2">Project Path:</label>
-                <input type="text" name="path" class="nb-input" placeholder="/home/user/my-project" required>
+                <div class="flex gap-2">
+                    <input type="text" name="path" id="project-path-input" class="nb-input flex-1" placeholder="/home/user/my-project" required>
+                    <label class="nb-btn cursor-pointer">
+                        <input type="file" id="project-folder-picker" webkitdirectory directory class="hidden" onchange="handleFolderSelect(this)">
+                        📁 Browse
+                    </label>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Click "Browse" to select a folder, or paste the path manually</p>
             </div>
             <div class="mb-6">
                 <label class="block font-bold mb-2">Display Name:</label>
@@ -23,3 +30,12 @@
         </form>
     </div>
 </div>
+
+<script>
+function handleFolderSelect(input) {
+    if (input.files && input.files.length > 0) {
+        const path = input.files[0].webkitRelativePath.split('/')[0];
+        document.getElementById('project-path-input').value = '/' + path;
+    }
+}
+</script>
