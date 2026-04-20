@@ -258,6 +258,8 @@ class DeepAgentsAdapter:
                         logger.debug("[ADAPTER] Event type: %s", agent_event.type)
 
                 for agent_event in agent_events:
+                    if agent_event.type == EventType.TITLE_REQUESTED:
+                        agent_event.thread_id = thread_id or "default"
                     if agent_event.type == EventType.TOOL_CALL:
                         logger.info(
                             "[ADAPTER] TOOL_CALL detected: %s (id=%s)", agent_event.tool_name, agent_event.tool_id
