@@ -25,15 +25,20 @@ class WebAdapter:
     
     async def run_task(self, message: str, *, thread_id: str | None = None) -> None:
         """Stream events from agent and dispatch to WebSocket."""
+        logger.info(f"[WEB_ADAPTER] Starting run_task for thread: {thread_id}")
         await self._send_status("thinking")
         
+        event_count = 0
         try:
             async for event in self.agent.stream(message, thread_id=thread_id):
+                event_count += 1
+                logger.debug(f"[WEB_ADAPTER] Dispatching event {event_count}: {event.type}")
                 await self._dispatch(event)
         except Exception:
             logger.exception("Agent stream error")
             await self._send_error("Agent stream encountered an unexpected error.")
         finally:
+            logger.info(f"[WEB_ADAPTER] Completed run_task. Dispatched {event_count} events.")
             await self._send_status("ready")
     
     async def _dispatch(self, event: AgentEvent) -> None:

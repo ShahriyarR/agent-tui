@@ -1,8 +1,9 @@
-<div x-data="approvalModal" 
-     x-show="show" 
+<div x-data="approvalModal"
+     x-show="show"
      x-cloak
      class="nb-modal-overlay"
-     @keydown.escape.window="close()">
+     @keydown.escape.window="close()"
+     @open-approval-modal.window="open($event.detail.tool_name, $event.detail.tool_args, $event.detail.tool_id)">
     <div class="nb-modal" @click.away="close()">
         <div class="border-b-3 border-nb-black bg-nb-yellow px-4 py-3 flex justify-between items-center">
             <span class="font-bold uppercase">🔧 Tool Approval</span>

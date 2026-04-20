@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -51,6 +52,9 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     # Create adapter
     adapter = WebAdapter(agent, websocket)
     
+    # Track if a task is running
+    current_task: asyncio.Task | None = None
+    
     try:
         while True:
             # Receive message from client
@@ -61,13 +65,40 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             
             match msg_type:
                 case "chat":
-                    # Start streaming response
-                    await adapter.run_task(
-                        message.get("message", ""),
-                        thread_id=message.get("thread_id")
-                    )
+                    user_message = message.get("message", "")
+                    thread_id = message.get("thread_id")
+                    logger.info(f"[WS] Received chat message: {user_message[:50]}... (thread: {thread_id})")
+
+                    # Cancel any existing task
+                    if current_task and not current_task.done():
+                        logger.info("[WS] Cancelling existing task")
+                        await adapter.cancel()
+                        current_task.cancel()
+                        try:
+                            await current_task
+                        except asyncio.CancelledError:
+                            pass
+
+                    # Start streaming response in background task
+                    # This allows the WebSocket to continue receiving messages (like approve_tool)
+                    message_end_count = 0
+                    async def run_chat():
+                        nonlocal message_end_count
+                        try:
+                            logger.info(f"[WS] Starting agent stream for thread: {thread_id}")
+                            await adapter.run_task(user_message, thread_id=thread_id)
+                            logger.info("[WS] Agent stream completed")
+                        except Exception as e:
+                            logger.exception("Chat task error")
+                            await websocket.send_json({
+                                "type": "error",
+                                "message": f"Chat error: {str(e)}"
+                            })
+
+                    current_task = asyncio.create_task(run_chat())
                 
                 case "approve_tool":
+                    # Forward approval to agent (non-blocking)
                     await adapter.approve_tool(
                         message.get("tool_id", ""),
                         message.get("approved", False)
@@ -77,6 +108,12 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                     await adapter.answer_question(message.get("answer", ""))
                 
                 case "cancel":
+                    if current_task and not current_task.done():
+                        current_task.cancel()
+                        try:
+                            await current_task
+                        except asyncio.CancelledError:
+                            pass
                     await adapter.cancel()
                 
                 case _:
@@ -91,4 +128,11 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     except Exception:
         logger.exception("WebSocket error")
     finally:
+        # Cancel any running task
+        if current_task and not current_task.done():
+            current_task.cancel()
+            try:
+                await current_task
+            except asyncio.CancelledError:
+                pass
         await connection_manager.disconnect(client_id)

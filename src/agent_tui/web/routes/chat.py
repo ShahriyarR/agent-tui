@@ -123,8 +123,8 @@ async def chat_page(chat_id: str, request: Request) -> Any:
     # Get chats for this project
     chats = await store.list_chats(project_id=chat.get("project_id"))
 
-    # Messages would come from agent conversation history
-    messages = []
+    # Load messages from database
+    messages = await store.get_messages(chat_id)
 
     return templates.TemplateResponse(
         request,

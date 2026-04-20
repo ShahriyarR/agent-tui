@@ -21,11 +21,21 @@
             <a href="/chat/{{ chat.id }}" class="flex-1 truncate">
                 {{ chat.title }}
             </a>
-            <button @click="editingChatId = '{{ chat.id }}'; editingChatTitle = '{{ chat.title }}'; showRenameModal = true" 
-                    class="ml-2 text-gray-500 hover:text-nb-black opacity-0 hover:opacity-100 transition-opacity"
-                    title="Rename chat">
-                ✎
-            </button>
+            <div class="flex items-center gap-1">
+                <button @click="editingChatId = '{{ chat.id }}'; editingChatTitle = '{{ chat.title }}'; showRenameModal = true" 
+                        class="text-gray-500 hover:text-nb-black p-1"
+                        title="Rename chat">
+                    ✎
+                </button>
+                <button hx-delete="/api/chats/{{ chat.id }}"
+                        hx-confirm="Are you sure you want to delete this chat?"
+                        hx-swap="none"
+                        @htmx:after-request="window.location.href = '/project/{{ current_project }}'"
+                        class="text-gray-500 hover:text-nb-pink p-1"
+                        title="Delete chat">
+                    🗑
+                </button>
+            </div>
         </div>
         {% endfor %}
     </div>

@@ -2,7 +2,7 @@
 
 {% block title %}Chat - Agent TUI Web{% endblock %}
 
-{% block alpine_data %}{...chatApp(), editingChatId: null, editingChatTitle: '', showRenameModal: false, showSkills: false, errorMessage: null, showError: false, showProjectModal: false}{% endblock %}
+{% block alpine_data %}chatApp(){% endblock %}
 
 {% block content %}
 <div class="h-full flex flex-col">
@@ -46,20 +46,28 @@
         <!-- Chat Area -->
         <main class="flex-1 flex flex-col bg-nb-bg">
             <!-- Messages -->
-            <div x-ref="messagesContainer" class="flex-1 overflow-y-auto p-4">
-                {% if current_chat %}
-                    {% for msg in messages %}
-                        {% from "components/message.html" import message %}
-                        {{ message(msg.type, msg.content, msg.timestamp) }}
-                    {% endfor %}
-                {% else %}
-                    <div class="flex items-center justify-center h-full text-gray-500">
-                        Select a chat or create a new one
-                    </div>
-                {% endif %}
+            <div x-ref="messagesContainer" id="messages-container" class="flex-1 overflow-y-auto p-4">
+                <div id="messages-list">
+                    {% if current_chat %}
+                        {% for msg in messages %}
+                            {% from "components/message.html" import message %}
+                            {{ message(msg.role, msg.content, msg.created_at) }}
+                        {% endfor %}
+                    {% else %}
+                        <div class="flex items-center justify-center h-full text-gray-500">
+                            Select a chat or create a new one
+                        </div>
+                    {% endif %}
+                </div>
                 
-                <!-- Streaming content goes here -->
-                <div id="streaming-content"></div>
+                <!-- Streaming content container (hidden placeholder) -->
+                <div id="streaming-content" style="display: none;"></div>
+            </div>
+            
+            <!-- Status Bar -->
+            <div x-show="statusText" x-cloak class="nb-status flex justify-between items-center">
+                <span x-text="statusText"></span>
+                <span x-show="statusText === 'thinking'" class="animate-pulse">⚡</span>
             </div>
             
             <!-- Input Area -->
@@ -101,11 +109,12 @@
                 <span class="font-bold uppercase">Rename Chat</span>
                 <button @click="showRenameModal = false" class="font-bold text-xl">&times;</button>
             </div>
-            <form :hx-patch="'/api/chats/' + editingChatId"
+            <form id="rename-chat-form"
                   hx-ext="json-enc"
                   hx-swap="none"
                   @htmx:after-request="showRenameModal = false; window.location.reload()"
                   class="p-6">
+                <input type="hidden" name="chat_id" x-model="editingChatId">
                 <div class="mb-6">
                     <label class="block font-bold mb-2">Chat Name:</label>
                     <input type="text" 
@@ -117,11 +126,34 @@
                 </div>
                 <div class="flex gap-3 justify-end">
                     <button type="button" @click="showRenameModal = false" class="nb-btn">Cancel</button>
-                    <button type="submit" class="nb-btn-primary">Save</button>
+                    <button type="button" @click="submitRename()" class="nb-btn-primary">Save</button>
                 </div>
             </form>
         </div>
     </div>
+    
+    <script>
+        function submitRename() {
+            const form = document.getElementById('rename-chat-form');
+            const chatId = document.querySelector('input[name="chat_id"]').value;
+            const title = document.querySelector('input[name="title"]').value;
+            
+            fetch('/api/chats/' + chatId, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title })
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to rename chat');
+                }
+            }).catch(err => {
+                console.error('Rename error:', err);
+                alert('Failed to rename chat');
+            });
+        }
+    </script>
     
     <!-- Skills / Slash Commands Panel -->
     <div x-show="showSkills" 
@@ -166,7 +198,7 @@
     </div>
     
     <!-- Error Toast Notification -->
-    <div x-show="showError" 
+    <div x-show="showErrorToast"
          x-cloak
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 transform translate-y-2"
@@ -182,101 +214,9 @@
                 <div class="font-bold text-nb-orange mb-1">Error</div>
                 <div x-text="errorMessage" class="text-sm"></div>
             </div>
-            <button @click="showError = false" class="font-bold text-gray-500 hover:text-nb-black">&times;</button>
+            <button @click="showErrorToast = false" class="font-bold text-gray-500 hover:text-nb-black">&times;</button>
         </div>
     </div>
 </div>
 
-<script>
-// WebSocket connection for real-time updates
-window.ws = null;
-
-function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    window.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
-    
-    window.ws.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        handleWebSocketMessage(data);
-    };
-    
-    window.ws.onclose = function() {
-        console.log('WebSocket closed, reconnecting...');
-        setTimeout(connectWebSocket, 1000);
-    };
-    
-    window.ws.onerror = function(error) {
-        console.error('WebSocket error:', error);
-    };
-}
-
-function handleWebSocketMessage(data) {
-    switch(data.type) {
-        case 'chunk':
-            appendChunk(data.text);
-            break;
-        case 'message_end':
-            // Find the Alpine component and call onStreamComplete
-            const el = document.querySelector('[x-data]');
-            if (el && el._x_dataStack) {
-                const component = el._x_dataStack[0];
-                if (component && component.onStreamComplete) {
-                    component.onStreamComplete();
-                }
-            }
-            break;
-        case 'tool_call':
-            showToolApproval(data);
-            break;
-        case 'status':
-            updateStatus(data.text);
-            break;
-        case 'error':
-            showError(data.message);
-            break;
-    }
-}
-
-function appendChunk(text) {
-    const container = document.getElementById('streaming-content');
-    container.innerHTML += text;
-}
-
-function showToolApproval(data) {
-    // Dispatch to Alpine component
-    window.dispatchEvent(new CustomEvent('tool-call-received', { detail: data }));
-}
-
-function approveTool(toolId, approved) {
-    if (window.ws && window.ws.readyState === WebSocket.OPEN) {
-        window.ws.send(JSON.stringify({
-            type: 'approve_tool',
-            tool_id: toolId,
-            approved: approved
-        }));
-    }
-}
-
-function updateStatus(text) {
-    // Update status indicator
-}
-
-function showError(message) {
-    // Use Alpine.js to show error toast
-    const el = document.querySelector('[x-data]');
-    if (el && el._x_dataStack && el._x_dataStack[0]) {
-        const app = el._x_dataStack[0];
-        app.errorMessage = message;
-        app.showError = true;
-        // Auto-hide after 5 seconds
-        setTimeout(() => { app.showError = false; }, 5000);
-    } else {
-        console.error('Error:', message);
-        alert('Error: ' + message);
-    }
-}
-
-// Connect on load
-connectWebSocket();
-</script>
 {% endblock %}

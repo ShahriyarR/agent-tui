@@ -9,15 +9,19 @@
   }
   
   .nb-message-user {
-    @apply border-3 border-nb-blue bg-blue-50 shadow-nb mb-4;
+    @apply border-3 border-nb-blue bg-blue-50 shadow-nb mb-4 max-w-[85%] ml-auto;
   }
-  
+
   .nb-message-assistant {
-    @apply border-3 border-nb-black bg-nb-card shadow-nb mb-4;
+    @apply border-3 border-nb-black bg-nb-card shadow-nb mb-4 max-w-[85%];
   }
-  
+
   .nb-message-header {
-    @apply border-b-3 border-nb-black bg-nb-yellow px-3 py-2 font-bold uppercase;
+    @apply border-b-3 border-nb-black bg-nb-yellow px-3 py-2 font-bold uppercase text-sm;
+  }
+
+  .nb-message-user .nb-message-header {
+    @apply bg-nb-blue text-white border-nb-black;
   }
   
   .nb-tool-card {
@@ -73,5 +77,62 @@
   
   .nb-token-counter {
     @apply border-3 border-nb-black bg-nb-purple text-white px-3 py-1 font-mono text-xs;
+  }
+
+  /* Code block styling */
+  .nb-message-assistant pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-none border-2 border-nb-black overflow-x-auto my-3;
+  }
+
+  .nb-message-assistant code {
+    @apply font-mono text-sm;
+  }
+
+  .nb-message-assistant p {
+    @apply mb-3 leading-relaxed;
+  }
+
+  .nb-message-assistant ul, .nb-message-assistant ol {
+    @apply mb-3 pl-6;
+  }
+
+  .nb-message-assistant li {
+    @apply mb-1;
+  }
+
+  .nb-message-assistant h1, .nb-message-assistant h2, .nb-message-assistant h3 {
+    @apply font-bold mb-3 mt-4;
+  }
+
+  .nb-message-assistant h1 {
+    @apply text-xl border-b-2 border-nb-black pb-2;
+  }
+
+  .nb-message-assistant h2 {
+    @apply text-lg;
+  }
+
+  .nb-message-assistant h3 {
+    @apply text-base;
+  }
+
+  .nb-message-assistant blockquote {
+    @apply border-l-4 border-nb-yellow pl-4 italic my-3;
+  }
+
+  .nb-message-assistant a {
+    @apply text-nb-blue underline;
+  }
+
+  .nb-message-assistant table {
+    @apply w-full border-2 border-nb-black my-3;
+  }
+
+  .nb-message-assistant th, .nb-message-assistant td {
+    @apply border-2 border-nb-black px-3 py-2;
+  }
+
+  .nb-message-assistant th {
+    @apply bg-nb-yellow font-bold;
   }
 }

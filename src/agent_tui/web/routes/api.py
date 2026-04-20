@@ -45,6 +45,11 @@ class CreateChatRequest(BaseModel):
     title: str = "New Chat"
 
 
+class CreateMessageRequest(BaseModel):
+    role: str
+    content: str
+
+
 # Project endpoints
 @router.get("/projects")
 async def list_projects() -> list[dict[str, Any]]:
@@ -137,8 +142,11 @@ async def update_chat(chat_id: str, request: CreateChatRequest) -> dict[str, Any
 @router.delete("/chats/{chat_id}")
 async def delete_chat(chat_id: str) -> dict[str, str]:
     """Delete a chat."""
-    # TODO: Implement delete_chat method in SessionStore
-    raise HTTPException(status_code=501, detail="Not implemented")
+    store = get_session_store()
+    success = await store.delete_chat(chat_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    return {"status": "deleted"}
 
 
 # Agent info endpoints
@@ -173,3 +181,22 @@ async def get_status() -> dict[str, Any]:
         "agent_type": agent_type,
         "version": "0.1.0"
     }
+
+
+# Message endpoints
+@router.get("/chats/{chat_id}/messages")
+async def get_messages(chat_id: str) -> list[dict[str, Any]]:
+    """Get all messages for a chat."""
+    store = get_session_store()
+    return await store.get_messages(chat_id)
+
+
+@router.post("/chats/{chat_id}/messages", status_code=201)
+async def create_message(chat_id: str, request: CreateMessageRequest) -> dict[str, Any]:
+    """Add a message to a chat."""
+    store = get_session_store()
+    return await store.add_message(
+        chat_id=chat_id,
+        role=request.role,
+        content=request.content
+    )
