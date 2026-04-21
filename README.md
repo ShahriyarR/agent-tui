@@ -7,7 +7,7 @@ Extracted from the [deepagents CLI](https://github.com/langchain-ai/deepagents/)
 ## Installation
 
 ```bash
-git clone https://github.com/your-repo/agent-tui.git
+git clone https://github.com/ShahriyarR/agent-tui.git
 cd agent-tui
 uv sync
 ```
