@@ -1,0 +1,19 @@
+{
+  "name": "agent-tui",
+  "version": "1.0.0",
+  "description": "Standalone TUI scaffold for building AI coding agent CLIs.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}

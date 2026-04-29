@@ -237,6 +237,35 @@ The Store is especially useful for:
 - Learned patterns and improvements
 - Long-term knowledge accumulation
 
+## Structured Output with Memory
+
+Structured output works seamlessly with memory. The agent remembers your schema preferences:
+
+```python
+from pydantic import BaseModel, Field
+from typing import List
+
+class UserPreference(BaseModel):
+    """User preferences for code style."""
+    preferred_language: str
+    style_rules: List[str]
+    indentation: str
+
+# First interaction - agent learns preferences
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "I prefer Python with 4-space indentation"}]
+}, config)
+
+# Later - agent remembers and uses structured output
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "What are my coding preferences?"}]
+}, config)
+
+preferences = result["structured_response"]
+print(f"Language: {preferences.preferred_language}")  # "Python"
+print(f"Indentation: {preferences.indentation}")  # "4-space"
+```
+
 ## Exercise
 
 Create an AGENTS.md for a Python project that includes:

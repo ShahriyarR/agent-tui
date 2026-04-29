@@ -316,6 +316,102 @@ class Settings:
         )
 ```
 
+## CLI Commands with Structured Output
+
+Add commands that output structured data for scripting:
+
+```python
+from pydantic import BaseModel, Field
+from typing import List
+import json
+
+class FileAnalysis(BaseModel):
+    """Structured file analysis result."""
+    file_path: str = Field(description="Path to analyzed file")
+    language: str = Field(description="Detected programming language")
+    line_count: int = Field(description="Total lines of code")
+    complexity_score: int = Field(description="Complexity score 1-10")
+    suggestions: List[str] = Field(description="Improvement suggestions")
+
+class AgentCLI:
+    """CLI with structured output support."""
+    
+    def __init__(self, adapter: AgentProtocol):
+        self.adapter = adapter
+        self.current_thread = "default"
+    
+    async def analyze_file(self, file_path: str, output_format: str = "text"):
+        """Analyze a file with optional structured output."""
+        # Create agent with structured output for analysis
+        agent = create_deep_agent(
+            model="openai:gpt-4o",
+            backend=LocalShellBackend(root_dir=Path.cwd()),
+            response_format=FileAnalysis,
+            system_prompt="Analyze code files and return structured analysis."
+        )
+        
+        result = agent.invoke({
+            "messages": [{"role": "user", "content": f"Analyze {file_path}"}]
+        }, {"configurable": {"thread_id": self.current_thread}})
+        
+        analysis = result["structured_response"]
+        
+        if output_format == "json":
+            # Output raw JSON for scripting
+            print(json.dumps(analysis.model_dump(), indent=2))
+        else:
+            # Pretty print for humans
+            print(f"📄 {analysis.file_path}")
+            print(f"   Language: {analysis.language}")
+            print(f"   Lines: {analysis.line_count}")
+            print(f"   Complexity: {analysis.complexity_score}/10")
+            print("   Suggestions:")
+            for suggestion in analysis.suggestions:
+                print(f"     • {suggestion}")
+
+# Usage in CLI
+# my-agent analyze src/main.py --format json
+# my-agent analyze src/main.py --format text (default)
+```
+
+## Batch Processing with Structured Output
+
+Process multiple files with consistent structured results:
+
+```python
+from typing import List
+import asyncio
+
+class BatchAnalysis(BaseModel):
+    """Results from analyzing multiple files."""
+    files_analyzed: int
+    total_lines: int
+    average_complexity: float
+    issues_found: List[dict]
+    recommendations: List[str]
+
+async def analyze_project(files: List[str]) -> BatchAnalysis:
+    """Analyze multiple files and return aggregated results."""
+    agent = create_deep_agent(
+        model="openai:gpt-4o",
+        backend=LocalShellBackend(root_dir=Path.cwd()),
+        response_format=BatchAnalysis
+    )
+    
+    file_list = "\n".join(files)
+    result = agent.invoke({
+        "messages": [{
+            "role": "user", 
+            "content": f"Analyze these files:\n{file_list}"
+        }]
+    })
+    
+    return result["structured_response"]
+
+# Use in CLI for batch operations
+# my-agent analyze-batch "src/*.py" --output report.json
+```
+
 ## Putting It Together
 
 File structure:

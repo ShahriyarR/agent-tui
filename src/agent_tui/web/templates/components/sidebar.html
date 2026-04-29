@@ -1,0 +1,53 @@
+<aside class="nb-sidebar w-64 flex flex-col h-full">
+    <!-- Projects Section -->
+    <div class="nb-sidebar-header">Projects</div>
+    <div class="overflow-y-auto" style="max-height: 25%;">
+        {% for project in projects %}
+        <a href="/project/{{ project.id }}" 
+           class="nb-sidebar-item block {% if current_project == project.id %}bg-nb-yellow{% endif %}">
+            {{ project.name }}
+        </a>
+        {% endfor %}
+    </div>
+    <div class="p-3 border-t-2 border-nb-black">
+        <button @click="showProjectModal = true" class="nb-btn-primary w-full text-sm py-2">+ Add Project</button>
+    </div>
+    
+    <!-- Chats Section -->
+    <div class="nb-sidebar-header">Chats</div>
+    <div class="flex-1 overflow-y-auto">
+        {% for chat in chats %}
+        <div class="nb-sidebar-item flex justify-between items-center pl-6 pr-2 text-sm {% if current_chat == chat.id %}bg-nb-yellow{% endif %}">
+            <a href="/chat/{{ chat.id }}" class="chat-title flex-1 truncate">
+                {{ chat.title }}
+            </a>
+            <div class="flex items-center gap-1">
+                <button @click="editingChatId = '{{ chat.id }}'; editingChatTitle = '{{ chat.title }}'; showRenameModal = true" 
+                        class="text-gray-500 hover:text-nb-black p-1"
+                        title="Rename chat">
+                    ✎
+                </button>
+                <button hx-delete="/api/chats/{{ chat.id }}"
+                        hx-confirm="Are you sure you want to delete this chat?"
+                        hx-swap="none"
+                        @htmx:after-request="window.location.href = '/project/{{ current_project }}'"
+                        class="text-gray-500 hover:text-nb-pink p-1"
+                        title="Delete chat">
+                    🗑
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- New Chat Button - Always at bottom -->
+    {% if current_project %}
+    <div class="p-3 border-t-3 border-nb-black bg-nb-bg">
+        <button class="nb-btn w-full text-sm py-2" 
+                hx-post="/api/projects/{{ current_project }}/chats" 
+                hx-ext="json-enc" 
+                hx-swap="none" 
+                @htmx:after-request="window.location.reload()">+ New Chat</button>
+    </div>
+    {% endif %}
+</aside>

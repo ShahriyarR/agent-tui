@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Iterator
 
 from agent_tui.domain.protocol import AgentEvent, EventType
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_tool_path(path: str) -> str:
@@ -60,6 +63,12 @@ class EventTranslator:
         - PLAN_STEP — not produced by LangGraph tool events; handled by adapter dispatch
         - INTERRUPT (Phase 8)
     """
+
+    def __init__(self) -> None:
+        """Initialize translator with state for title generation tracking."""
+        self._first_human_content: str = ""
+        self._first_ai_content: str = ""
+        self._emitted_title_requested: bool = False
 
     def translate(self, event: dict[str, Any]) -> Iterator[AgentEvent]:
         """Translate a raw DeepAgents event dict to AgentEvent stream.
@@ -118,6 +127,8 @@ class EventTranslator:
             content = chunk.get("content", "")
 
         if content and isinstance(content, str):
+            if not self._first_ai_content:
+                self._first_ai_content = content
             yield AgentEvent(
                 type=EventType.MESSAGE_CHUNK,
                 text=content,
@@ -217,6 +228,36 @@ class EventTranslator:
         if not data_present:
             return
         yield AgentEvent(type=EventType.MESSAGE_END)
+
+        if self._first_ai_content and not self._emitted_title_requested:
+            first_human = self._extract_first_human(data)
+            if first_human:
+                self._emitted_title_requested = True
+                yield AgentEvent(
+                    type=EventType.TITLE_REQUESTED,
+                    user_message=first_human[:40],
+                    assistant_response=self._first_ai_content[:40],
+                    thread_id="",
+                )
+
+    def _extract_first_human(self, data: dict) -> str | None:
+        """Extract first human message content from checkpoint data."""
+        try:
+            channel_values = data.get("channel_values", {})
+            messages = channel_values.get("messages", [])
+            for msg in messages:
+                msg_type = getattr(msg, "type", None)
+                if msg_type in ("human", "user", "HumanMessage"):
+                    content = getattr(msg, "content", "")
+                    if isinstance(content, str):
+                        return content
+                    if isinstance(content, list):
+                        for part in content:
+                            if isinstance(part, dict) and part.get("type") == "text":
+                                return part.get("text", "")
+        except Exception:
+            logger.debug("Failed to extract first human from checkpoint")
+        return None
 
     def _handle_tool_error(self, data: dict[str, Any], event: dict[str, Any]) -> Iterator[AgentEvent]:
         """Handle on_tool_error events for errors."""

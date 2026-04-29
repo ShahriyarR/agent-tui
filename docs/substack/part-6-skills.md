@@ -228,6 +228,49 @@ result = agent.invoke({
 # Agent loads python-testing skill automatically
 ```
 
+## Skills with Structured Output
+
+Skills work great with structured output for complex tasks:
+
+```python
+from pydantic import BaseModel, Field
+from typing import List
+
+# Define output schema for test generation
+class TestCase(BaseModel):
+    """A single test case."""
+    name: str = Field(description="Test function name")
+    description: str = Field(description="What this test verifies")
+    code: str = Field(description="The test code")
+
+class TestSuite(BaseModel):
+    """Complete test suite for a function."""
+    function_name: str = Field(description="Function being tested")
+    test_cases: List[TestCase] = Field(description="List of test cases")
+    fixtures_needed: List[str] = Field(description="Required pytest fixtures")
+
+# Create agent with skills and structured output
+agent = create_deep_agent(
+    model="openai:gpt-4o",
+    backend=FilesystemBackend(root_dir=".", virtual_mode=True),
+    skills=["~/.deepagents/skills/testing"],
+    response_format=TestSuite,
+    system_prompt="Generate tests using the testing skill and structured output."
+)
+
+# Generate structured tests
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "Write tests for calculate_discount()"}]
+}, config)
+
+test_suite = result["structured_response"]
+print(f"Testing function: {test_suite.function_name}")
+for test in test_suite.test_cases:
+    print(f"\nTest: {test.name}")
+    print(f"Description: {test.description}")
+    print(f"Code:\n{test.code}")
+```
+
 ## Skills vs Memory
 
 | | Skills | Memory (AGENTS.md) |

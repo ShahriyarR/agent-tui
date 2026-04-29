@@ -116,6 +116,37 @@ async for event in agent.astream_events({
 
 This yields tokens as they're generated, essential for real-time UIs.
 
+## Structured Output
+
+For programmatic use, get typed responses instead of text:
+
+```python
+from pydantic import BaseModel, Field
+
+class CodeExplanation(BaseModel):
+    """Structured explanation of code."""
+    concept: str = Field(description="The concept being explained")
+    key_points: list[str] = Field(description="Key points to understand")
+    example: str = Field(description="A practical code example")
+
+agent = create_deep_agent(
+    model="openai:gpt-4o",
+    response_format=CodeExplanation
+)
+
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "Explain Python decorators"}]
+}, config)
+
+# Access structured data directly
+explanation = result["structured_response"]
+print(f"Concept: {explanation.concept}")
+print(f"Key points: {explanation.key_points}")
+print(f"Example:\n{explanation.example}")
+```
+
+Structured output is ideal when you need to process the response programmatically rather than just displaying it.
+
 ## What You Get For Free
 
 Every DeepAgent has these built-in tools:

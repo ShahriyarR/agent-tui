@@ -5,19 +5,31 @@ from __future__ import annotations
 import asyncio
 import logging
 import sqlite3
+import uuid
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, NamedTuple, NotRequired, TypedDict, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, NotRequired, TypedDict, cast
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
-    import aiosqlite
-
     from agent_tui.common.output import OutputFormat
 
 logger = logging.getLogger(__name__)
+
+# Deferred import for aiosqlite (imported at runtime)
+aiosqlite = None
+
+
+def _get_aiosqlite():
+    """Get aiosqlite module, importing if necessary."""
+    global aiosqlite
+    if aiosqlite is None:
+        import aiosqlite as _aiosqlite
+        aiosqlite = _aiosqlite
+    return aiosqlite
 
 _message_count_cache: dict[str, tuple[str | None, int]] = {}
 _MAX_MESSAGE_COUNT_CACHE = 4096
@@ -1195,3 +1207,376 @@ async def delete_thread_command(
             f"Thread '{escaped_id}' not found or already deleted.",
             style=theme.MUTED,
         )
+
+
+class SessionStore:
+    """Web interface session store with project management.
+    
+    Manages projects and chat sessions for the web interface.
+    Every chat must belong to a project.
+    """
+    
+    def __init__(self, db_path: str | Path) -> None:
+        """Initialize the session store.
+        
+        Args:
+            db_path: Path to the SQLite database file.
+        """
+        self.db_path = str(db_path)
+    
+    async def initialize(self) -> None:
+        """Initialize the database schema."""
+        aiosqlite_mod = _get_aiosqlite()
+        
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            # Create projects table
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS projects (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    path TEXT NOT NULL UNIQUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Create chat_sessions table with project_id
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS chat_sessions (
+                    id TEXT PRIMARY KEY,
+                    project_id TEXT NOT NULL,
+                    title TEXT NOT NULL DEFAULT 'New Chat',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+                )
+            """)
+            
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_chats_project ON chat_sessions(project_id)
+            """)
+            
+            # Create messages table for chat history
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS messages (
+                    id TEXT PRIMARY KEY,
+                    chat_id TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (chat_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
+                )
+            """)
+            
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id, created_at)
+            """)
+            
+            await db.commit()
+    
+    async def create_project(self, name: str, path: str) -> dict[str, Any]:
+        """Create a new project.
+        
+        Args:
+            name: Display name for the project.
+            path: Filesystem path for the project.
+            
+        Returns:
+            Dictionary with project details including generated ID.
+        """
+        project_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
+        aiosqlite_mod = _get_aiosqlite()
+        
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            await db.execute(
+                """
+                INSERT INTO projects (id, name, path, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (project_id, name, path, now, now)
+            )
+            await db.commit()
+        
+        return {
+            "id": project_id,
+            "name": name,
+            "path": path,
+            "created_at": now,
+            "updated_at": now,
+        }
+    
+    async def get_project(self, project_id: str) -> dict[str, Any] | None:
+        """Get a project by ID.
+        
+        Args:
+            project_id: The unique project identifier.
+            
+        Returns:
+            Project dictionary or None if not found.
+        """
+        aiosqlite_mod = _get_aiosqlite()
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            db.row_factory = aiosqlite_mod.Row
+            async with db.execute(
+                "SELECT * FROM projects WHERE id = ?",
+                (project_id,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if row:
+                    return dict(row)
+                return None
+    
+    async def list_projects(self) -> list[dict[str, Any]]:
+        """List all projects.
+        
+        Returns:
+            List of project dictionaries, ordered by updated_at descending.
+        """
+        aiosqlite_mod = _get_aiosqlite()
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            db.row_factory = aiosqlite_mod.Row
+            async with db.execute(
+                "SELECT * FROM projects ORDER BY updated_at DESC"
+            ) as cursor:
+                rows = await cursor.fetchall()
+            return [dict(row) for row in rows]
+    
+    async def update_chat(self, chat_id: str, title: str) -> dict[str, Any] | None:
+        """Update a chat's title.
+        
+        Args:
+            chat_id: The chat ID to update.
+            title: New title for the chat.
+            
+        Returns:
+            Updated chat dictionary or None if not found.
+        """
+        aiosqlite_mod = _get_aiosqlite()
+
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            db.row_factory = aiosqlite_mod.Row
+
+            # Check if chat exists
+            async with db.execute(
+                "SELECT * FROM chat_sessions WHERE id = ?",
+                (chat_id,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if not row:
+                    return None
+
+            # Update title
+            await db.execute(
+                "UPDATE chat_sessions SET title = ?, updated_at = ? WHERE id = ?",
+                (title, datetime.now().isoformat(), chat_id)
+            )
+            await db.commit()
+
+            # Return updated chat
+            async with db.execute(
+                "SELECT * FROM chat_sessions WHERE id = ?",
+                (chat_id,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                return dict(row) if row else None
+    
+    async def delete_chat(self, chat_id: str) -> bool:
+        """Delete a chat and all its messages.
+        
+        Args:
+            chat_id: The chat to delete.
+            
+        Returns:
+            True if deleted, False if not found.
+        """
+        aiosqlite_mod = _get_aiosqlite()
+        
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            # Check if chat exists
+            async with db.execute(
+                "SELECT * FROM chat_sessions WHERE id = ?",
+                (chat_id,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if not row:
+                    return False
+            
+            # Delete chat (messages will be deleted via CASCADE)
+            await db.execute(
+                "DELETE FROM chat_sessions WHERE id = ?",
+                (chat_id,)
+            )
+            await db.commit()
+            
+            return True
+    
+    async def update_project(
+        self, 
+        project_id: str, 
+        name: str | None = None
+    ) -> dict[str, Any] | None:
+        """Update a project.
+        
+        Args:
+            project_id: The project to update.
+            name: New display name (optional).
+            
+        Returns:
+            Updated project dictionary or None if not found.
+        """
+        aiosqlite_mod = _get_aiosqlite()
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            if name:
+                await db.execute(
+                    "UPDATE projects SET name = ?, updated_at = ? WHERE id = ?",
+                    (name, datetime.now().isoformat(), project_id)
+                )
+                await db.commit()
+        
+        return await self.get_project(project_id)
+    
+    async def delete_project(self, project_id: str) -> bool:
+        """Delete a project and all its chats.
+        
+        Args:
+            project_id: The project to delete.
+            
+        Returns:
+            True if project was deleted.
+        """
+        aiosqlite_mod = _get_aiosqlite()
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            await db.execute("DELETE FROM projects WHERE id = ?", (project_id,))
+            await db.commit()
+            return True
+    
+    async def create_chat(
+        self, 
+        title: str = "New Chat", 
+        project_id: str | None = None
+    ) -> dict[str, Any]:
+        """Create a new chat session. Requires project_id.
+        
+        Args:
+            title: Display title for the chat.
+            project_id: Required project ID to associate with the chat.
+            
+        Raises:
+            ValueError: If project_id is not provided.
+            
+        Returns:
+            Dictionary with chat details.
+        """
+        if not project_id:
+            raise ValueError("project_id is required for web interface")
+        
+        chat_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
+        aiosqlite_mod = _get_aiosqlite()
+        
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            await db.execute(
+                """
+                INSERT INTO chat_sessions (id, project_id, title, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (chat_id, project_id, title, now, now)
+            )
+            await db.commit()
+        
+        return {
+            "id": chat_id,
+            "project_id": project_id,
+            "title": title,
+            "created_at": now,
+            "updated_at": now,
+        }
+    
+    async def list_chats(self, project_id: str | None = None) -> list[dict[str, Any]]:
+        """List chat sessions, optionally filtered by project.
+        
+        Args:
+            project_id: Optional filter by project.
+            
+        Returns:
+            List of chat dictionaries.
+        """
+        aiosqlite_mod = _get_aiosqlite()
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            db.row_factory = aiosqlite_mod.Row
+            
+            if project_id:
+                async with db.execute(
+                    """SELECT * FROM chat_sessions 
+                       WHERE project_id = ? 
+                       ORDER BY updated_at DESC""",
+                    (project_id,)
+                ) as cursor:
+                    rows = await cursor.fetchall()
+            else:
+                async with db.execute(
+                    "SELECT * FROM chat_sessions ORDER BY updated_at DESC"
+                ) as cursor:
+                    rows = await cursor.fetchall()
+            
+            return [dict(row) for row in rows]
+    
+    async def add_message(self, chat_id: str, role: str, content: str) -> dict[str, Any]:
+        """Add a message to a chat.
+        
+        Args:
+            chat_id: The chat session ID.
+            role: Message role ('user' or 'assistant').
+            content: Message content.
+            
+        Returns:
+            Dictionary with message details.
+        """
+        message_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
+        aiosqlite_mod = _get_aiosqlite()
+        
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            await db.execute(
+                """
+                INSERT INTO messages (id, chat_id, role, content, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (message_id, chat_id, role, content, now)
+            )
+            # Update chat's updated_at timestamp
+            await db.execute(
+                "UPDATE chat_sessions SET updated_at = ? WHERE id = ?",
+                (now, chat_id)
+            )
+            await db.commit()
+        
+        return {
+            "id": message_id,
+            "chat_id": chat_id,
+            "role": role,
+            "content": content,
+            "created_at": now,
+        }
+    
+    async def get_messages(self, chat_id: str) -> list[dict[str, Any]]:
+        """Get all messages for a chat.
+        
+        Args:
+            chat_id: The chat session ID.
+            
+        Returns:
+            List of message dictionaries ordered by creation time.
+        """
+        aiosqlite_mod = _get_aiosqlite()
+        async with aiosqlite_mod.connect(self.db_path) as db:
+            db.row_factory = aiosqlite_mod.Row
+            async with db.execute(
+                """SELECT * FROM messages 
+                   WHERE chat_id = ? 
+                   ORDER BY created_at ASC""",
+                (chat_id,)
+            ) as cursor:
+                rows = await cursor.fetchall()
+                return [dict(row) for row in rows]

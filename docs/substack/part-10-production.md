@@ -324,6 +324,89 @@ async def safe_tool_call(tool_name: str, args: dict) -> str:
         return f"Error: Could not execute {tool_name}"
 ```
 
+## Structured Output Best Practices
+
+### 1. Schema Design
+
+Design schemas that match your domain:
+
+```python
+from pydantic import BaseModel, Field, validator
+from typing import List, Optional
+
+class ProductionMetric(BaseModel):
+    """Metrics for production monitoring."""
+    metric_name: str = Field(description="Name of the metric")
+    value: float = Field(description="Current value")
+    unit: str = Field(description="Unit of measurement")
+    timestamp: str = Field(description="ISO 8601 timestamp")
+    
+    @validator('value')
+    def validate_positive(cls, v):
+        if v < 0:
+            raise ValueError("Metric value must be non-negative")
+        return v
+
+class Alert(BaseModel):
+    """Production alert structure."""
+    severity: str = Field(description="'critical', 'warning', or 'info'")
+    service: str = Field(description="Affected service")
+    message: str = Field(description="Alert description")
+    metrics: List[ProductionMetric] = Field(description="Related metrics")
+    
+    @validator('severity')
+    def validate_severity(cls, v):
+        allowed = {'critical', 'warning', 'info'}
+        if v not in allowed:
+            raise ValueError(f"Severity must be one of {allowed}")
+        return v
+```
+
+### 2. Versioning Schemas
+
+Version your schemas for backward compatibility:
+
+```python
+class ApiResponseV1(BaseModel):
+    """API response schema version 1."""
+    status: str
+    data: dict
+
+class ApiResponseV2(BaseModel):
+    """API response schema version 2 with metadata."""
+    status: str
+    data: dict
+    metadata: dict
+    request_id: str
+
+# Use versioned schemas
+RESPONSE_SCHEMAS = {
+    "v1": ApiResponseV1,
+    "v2": ApiResponseV2,
+}
+
+def create_agent_with_version(version: str = "v2"):
+    schema = RESPONSE_SCHEMAS.get(version, ApiResponseV2)
+    return create_deep_agent(
+        model="openai:gpt-4o",
+        response_format=schema
+    )
+```
+
+### 3. Handling Partial Data
+
+Use Optional fields for potentially missing data:
+
+```python
+class AnalysisResult(BaseModel):
+    """Analysis with optional fields for incomplete data."""
+    primary_finding: str
+    confidence_score: float
+    secondary_findings: Optional[List[str]] = None
+    recommendations: Optional[List[str]] = None
+    metadata: Optional[dict] = None
+```
+
 ## Cost Management
 
 ### 1. Token Budgets
@@ -362,9 +445,26 @@ Congratulations! You now have:
 ✅ Human approval for safety  
 ✅ Persistent memory  
 ✅ On-demand skills  
+✅ **Structured output** with Pydantic schemas  
 ✅ Comprehensive tests  
 ✅ Security controls  
 ✅ Monitoring and observability  
+
+### Structured Output Throughout
+
+You've implemented structured output across the entire system:
+
+| Component | Schema Purpose |
+|-----------|----------------|
+| **Part 2** | Typed responses for programmatic use |
+| **Part 3** | Tool inputs (`args_schema`) and outputs (`response_format`) |
+| **Part 4** | File analysis results with code quality metrics |
+| **Part 5** | Persistent preference storage |
+| **Part 6** | Skill-based test generation |
+| **Part 7** | Approval decision tracking |
+| **Part 8** | CLI command outputs (JSON/text modes) |
+| **Part 9** | Schema validation in tests |
+| **Part 10** | Production monitoring metrics and alerts |  
 
 ## Next Steps
 

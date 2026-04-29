@@ -89,6 +89,8 @@ For production, consider:
 ```python
 import os
 from pathlib import Path
+from pydantic import BaseModel, Field
+from typing import List
 from deepagents import create_deep_agent
 from deepagents.backends import LocalShellBackend
 from langchain.tools import tool
@@ -107,17 +109,33 @@ def web_search(query: str) -> str:
     # Implementation from Part 3
     pass
 
+# Define structured output for code reviews
+class CodeIssue(BaseModel):
+    """A single code issue."""
+    file_path: str = Field(description="File where issue was found")
+    line_number: int = Field(description="Line number of the issue")
+    severity: str = Field(description="'error', 'warning', or 'info'")
+    message: str = Field(description="Description of the issue")
+    suggestion: str = Field(description="How to fix it")
+
+class CodeReview(BaseModel):
+    """Structured code review results."""
+    summary: str = Field(description="Overall assessment")
+    issues: List[CodeIssue] = Field(description="List of issues found")
+    score: int = Field(description="Code quality score 1-10")
+
 agent = create_deep_agent(
     model="openai:gpt-4o",
     backend=backend,
     tools=[web_search],
+    response_format=CodeReview,  # Get structured review output
     system_prompt="""You are a Python code reviewer.
 
 When asked to review code:
 1. Read the relevant files
 2. Analyze for bugs, style issues, and improvements
 3. Run tests if available
-4. Provide specific, actionable feedback"""
+4. Provide structured feedback"""
 )
 
 # Use the agent
@@ -128,6 +146,15 @@ result = agent.invoke({
         "content": "Review the src/ directory and run tests"
     }]
 }, config)
+
+# Access structured review data
+review = result["structured_response"]
+print(f"Code Quality Score: {review.score}/10")
+print(f"Summary: {review.summary}")
+for issue in review.issues:
+    print(f"  {issue.severity.upper()}: {issue.file_path}:{issue.line_number}")
+    print(f"    {issue.message}")
+    print(f"    Suggestion: {issue.suggestion}")
 ```
 
 ## Restricting Access

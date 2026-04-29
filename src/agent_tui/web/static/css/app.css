@@ -1,0 +1,178 @@
+/* static/css/app.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .nb-card {
+    @apply border-3 border-nb-black shadow-nb bg-nb-card;
+  }
+  
+  .nb-message-user {
+    @apply border-3 border-nb-blue bg-blue-50 shadow-nb mb-4 max-w-[85%] ml-auto;
+  }
+
+  .nb-message-assistant {
+    @apply border-3 border-nb-black bg-nb-card shadow-nb mb-4 max-w-[85%];
+  }
+
+  .nb-message-header {
+    @apply border-b-3 border-nb-black bg-nb-yellow px-3 py-2 font-bold uppercase text-sm;
+  }
+
+  .nb-message-user .nb-message-header {
+    @apply bg-nb-blue text-white border-nb-black;
+  }
+  
+  .nb-tool-card {
+    @apply border-3 border-nb-pink shadow-nb-lg bg-pink-50 my-4;
+  }
+  
+  .nb-tool-header {
+    @apply bg-nb-pink text-white border-b-3 border-nb-black px-3 py-2 font-mono font-bold;
+  }
+  
+  .nb-btn {
+    @apply border-3 border-nb-black shadow-nb px-6 py-3 font-bold uppercase bg-nb-white 
+           transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 
+           hover:shadow-nb-sm active:translate-x-1 active:translate-y-1 active:shadow-none;
+  }
+  
+  .nb-btn-primary {
+    @apply nb-btn bg-nb-blue text-white;
+  }
+  
+  .nb-btn-danger {
+    @apply nb-btn bg-nb-orange text-white;
+  }
+  
+  .nb-sidebar {
+    @apply border-r-3 border-nb-black bg-nb-bg;
+  }
+  
+  .nb-sidebar-item {
+    @apply border-b-2 border-nb-black px-4 py-4 font-bold hover:bg-nb-yellow;
+  }
+  
+  .nb-sidebar-header {
+    @apply border-b-3 border-nb-black bg-nb-black text-white px-4 py-3 font-bold uppercase;
+  }
+  
+  .nb-modal-overlay {
+    @apply fixed inset-0 bg-black/80 z-50 flex items-center justify-center;
+  }
+  
+  .nb-modal {
+    @apply border-4 border-nb-black shadow-nb-xl bg-nb-card max-w-lg w-full mx-4;
+  }
+  
+  .nb-input {
+    @apply border-3 border-nb-black shadow-nb px-4 py-3 w-full focus:outline-none 
+           focus:shadow-nb-sm focus:-translate-x-0.5 focus:-translate-y-0.5;
+  }
+  
+  .nb-status {
+    @apply border-t-3 border-nb-black bg-nb-yellow px-4 py-2 font-bold uppercase text-sm;
+  }
+  
+  .nb-token-counter {
+    @apply border-3 border-nb-black bg-nb-purple text-white px-3 py-1 font-mono text-xs;
+  }
+
+  /* Code block styling */
+  .nb-message-assistant pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-none border-2 border-nb-black overflow-x-auto my-3;
+  }
+
+  .nb-message-assistant code {
+    @apply font-mono text-sm;
+  }
+
+  .nb-message-assistant p {
+    @apply mb-3 leading-relaxed;
+  }
+
+  .nb-message-assistant ul, .nb-message-assistant ol {
+    @apply mb-3 pl-6;
+  }
+
+  .nb-message-assistant li {
+    @apply mb-1;
+  }
+
+  .nb-message-assistant h1, .nb-message-assistant h2, .nb-message-assistant h3 {
+    @apply font-bold mb-3 mt-4;
+  }
+
+  .nb-message-assistant h1 {
+    @apply text-xl border-b-2 border-nb-black pb-2;
+  }
+
+  .nb-message-assistant h2 {
+    @apply text-lg;
+  }
+
+  .nb-message-assistant h3 {
+    @apply text-base;
+  }
+
+  .nb-message-assistant blockquote {
+    @apply border-l-4 border-nb-yellow pl-4 italic my-3;
+  }
+
+  .nb-message-assistant a {
+    @apply text-nb-blue underline;
+  }
+
+  .nb-message-assistant table {
+    @apply w-full border-2 border-nb-black my-3;
+  }
+
+  .nb-message-assistant th, .nb-message-assistant td {
+    @apply border-2 border-nb-black px-3 py-2;
+  }
+
+  .nb-message-assistant th {
+    @apply bg-nb-yellow font-bold;
+  }
+}
+
+/* Running Dino Animation */
+@keyframes dino-run {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(4px) rotate(5deg); }
+  50% { transform: translateX(0); }
+  75% { transform: translateX(4px) rotate(-5deg); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes motion-dash {
+  0% { opacity: 1; transform: translateX(0); }
+  50% { opacity: 0.3; transform: translateX(8px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.dino-runner {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.dino-runner .dino {
+  animation: dino-run 0.4s ease-in-out infinite;
+  display: inline-block;
+}
+
+.dino-runner .motion-line {
+  animation: motion-dash 0.3s ease-in-out infinite;
+  color: #FB5607;
+  font-weight: bold;
+}
+
+.dino-runner .motion-line:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.dino-runner .motion-line:nth-child(3) {
+  animation-delay: 0.2s;
+}

@@ -24,6 +24,7 @@ class EventType(StrEnum):
     SUBAGENT_END = "subagent_end"
     CONTEXT_SUMMARIZED = "context_summarized"
     INTERRUPT = "interrupt"
+    TITLE_REQUESTED = "title_requested"
 
 
 @dataclass
@@ -59,6 +60,11 @@ class AgentEvent:
 
     # SUBAGENT_START, SUBAGENT_END
     subagent_name: str = ""
+
+    # TITLE_REQUESTED
+    user_message: str = ""
+    assistant_response: str = ""
+    thread_id: str = ""
 
     # Extensible payload
     metadata: dict[str, Any] = field(default_factory=dict)

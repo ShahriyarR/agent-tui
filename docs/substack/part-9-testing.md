@@ -317,12 +317,123 @@ agent.invoke({...}, config1)
 agent.invoke({...}, config2)  # Won't see config1's messages
 ```
 
+## Testing Structured Output
+
+Test your Pydantic schemas to ensure they validate correctly:
+
+```python
+# test_schemas.py
+import pytest
+from pydantic import ValidationError
+from src.schemas import CodeReview, CodeIssue
+
+def test_code_issue_valid():
+    """Test valid CodeIssue creation."""
+    issue = CodeIssue(
+        file_path="src/main.py",
+        line_number=42,
+        severity="warning",
+        message="Unused import",
+        suggestion="Remove the import"
+    )
+    assert issue.line_number == 42
+    assert issue.severity == "warning"
+
+def test_code_issue_invalid_severity():
+    """Test that invalid severity is rejected."""
+    with pytest.raises(ValidationError) as exc_info:
+        CodeIssue(
+            file_path="src/main.py",
+            line_number=42,
+            severity="invalid",  # Should be 'error', 'warning', or 'info'
+            message="Test",
+            suggestion="Fix it"
+        )
+    assert "severity" in str(exc_info.value)
+
+def test_code_review_schema():
+    """Test complete CodeReview schema."""
+    review = CodeReview(
+        summary="Good code overall",
+        issues=[
+            CodeIssue(
+                file_path="src/main.py",
+                line_number=10,
+                severity="info",
+                message="Consider adding docstring",
+                suggestion="Add function documentation"
+            )
+        ],
+        score=8
+    )
+    assert review.score == 8
+    assert len(review.issues) == 1
+    assert review.issues[0].line_number == 10
+```
+
+### Testing Agent with Structured Output
+
+```python
+# test_structured_output.py
+import pytest
+from deepagents import create_deep_agent
+from pydantic import BaseModel, Field
+
+class SimpleResult(BaseModel):
+    """Simple result for testing."""
+    answer: str = Field(description="The answer")
+    confidence: int = Field(description="Confidence 0-100")
+
+@pytest.mark.asyncio
+async def test_agent_returns_structured_output():
+    """Test that agent returns valid structured output."""
+    agent = create_deep_agent(
+        model="openai:gpt-4o",
+        response_format=SimpleResult
+    )
+    
+    result = agent.invoke({
+        "messages": [{"role": "user", "content": "Say hello with confidence 95"}]
+    })
+    
+    # Verify structured response exists
+    assert "structured_response" in result
+    
+    # Verify it's the correct type
+    structured = result["structured_response"]
+    assert isinstance(structured, SimpleResult)
+    
+    # Verify fields
+    assert structured.answer == "hello"
+    assert structured.confidence == 95
+
+@pytest.mark.asyncio
+async def test_structured_output_validation():
+    """Test that invalid structured output is caught."""
+    class StrictSchema(BaseModel):
+        """Schema with strict validation."""
+        count: int = Field(ge=0, le=100, description="Count 0-100")
+    
+    agent = create_deep_agent(
+        model="openai:gpt-4o",
+        response_format=StrictSchema
+    )
+    
+    # This should work
+    result = agent.invoke({
+        "messages": [{"role": "user", "content": "Return count 50"}]
+    })
+    assert result["structured_response"].count == 50
+```
+
 ## Testing Checklist
 
 Before shipping your agent:
 
 - [ ] Unit tests for all components
+- [ ] Unit tests for Pydantic schemas (validation, edge cases)
 - [ ] Integration tests for agent + backend
+- [ ] Integration tests for structured output
 - [ ] E2E tests for common workflows
 - [ ] Error handling verified
 - [ ] Tool approval flow tested
@@ -337,6 +448,8 @@ Write tests for:
 2. Tool approval flow
 3. Error handling in the adapter
 4. CLI argument parsing
+5. Pydantic schema validation (valid and invalid cases)
+6. Structured output from agent responses
 
 ## Key Takeaway
 

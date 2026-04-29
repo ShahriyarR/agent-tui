@@ -283,11 +283,74 @@ async def get_approval_with_timeout(tool_name: str, timeout: int = 60) -> bool:
         return False
 ```
 
+## Structured Output for Approval Decisions
+
+Use structured output to track and analyze approval patterns:
+
+```python
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import List, Optional
+
+class ApprovalDecision(BaseModel):
+    """Record of a single approval decision."""
+    tool_name: str = Field(description="Tool that was approved/denied")
+    tool_args: dict = Field(description="Arguments passed to the tool")
+    approved: bool = Field(description="Whether operation was approved")
+    timestamp: datetime = Field(default_factory=datetime.now)
+    reason: Optional[str] = Field(description="Why decision was made")
+
+class ApprovalSummary(BaseModel):
+    """Summary of approval activity."""
+    total_requests: int
+    approved_count: int
+    denied_count: int
+    approval_rate: float
+    most_common_tools: List[str]
+
+# Track approvals with structured output
+approval_history: List[ApprovalDecision] = []
+
+async def handle_approval(tool_name: str, tool_args: dict) -> bool:
+    """Handle approval with structured logging."""
+    # Get user decision
+    decision = input(f"Approve {tool_name}? (y/n): ").lower() == "y"
+    reason = input("Reason (optional): ") if not decision else None
+    
+    # Record structured decision
+    approval_history.append(ApprovalDecision(
+        tool_name=tool_name,
+        tool_args=tool_args,
+        approved=decision,
+        reason=reason
+    ))
+    
+    return decision
+
+# Later: analyze approval patterns
+agent = create_deep_agent(
+    model="openai:gpt-4o",
+    response_format=ApprovalSummary,
+    system_prompt="Analyze approval history and provide summary"
+)
+
+result = agent.invoke({
+    "messages": [{
+        "role": "user", 
+        "content": f"Analyze: {[a.model_dump() for a in approval_history]}"
+    }]
+})
+
+summary = result["structured_response"]
+print(f"Approval rate: {summary.approval_rate:.1%}")
+print(f"Most common tools: {summary.most_common_tools}")
+```
+
 ## Exercise
 
 Implement an approval system that:
 1. Shows a formatted prompt for each tool type
-2. Logs all approvals to a file
+2. Logs all approvals to a file using structured output
 3. Has a 30-second timeout
 4. Remembers the user's last decision for similar operations
 

@@ -1,0 +1,15 @@
+{% macro message(type, content, timestamp=None, role=None) -%}
+{# Support both 'type' (user/assistant) and 'role' from database #}
+{% set msg_type = type or role or 'assistant' %}
+<div class="{% if msg_type == 'user' %}nb-message-user{% else %}nb-message-assistant{% endif %}">
+    <div class="nb-message-header flex justify-between items-center">
+        <span>{% if msg_type == 'user' %}👤 You{% else %}🤖 Assistant{% endif %}</span>
+        {% if timestamp %}
+        <span class="text-xs opacity-70">{{ timestamp }}</span>
+        {% endif %}
+    </div>
+    <div class="p-4 prose prose-sm max-w-none">
+        {{ content|safe }}
+    </div>
+</div>
+{%- endmacro %}
