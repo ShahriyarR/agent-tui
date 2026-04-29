@@ -50,8 +50,9 @@ Then open http://localhost:8000 in your browser.
 
 - **Projects**: Organize chats by project (working directory)
 - **Real-time Chat**: WebSocket-based streaming responses
+- **Auto-generated Thread Titles**: Titles are automatically generated from your first message and the AI's response (max 40 characters). Shows "Generating title..." placeholder until ready.
 - **Tool Approval**: Interactive approval/rejection of tool calls
-- **Neobrutalist Design**: Bold, high-contrast UI
+- **Neobrutalist Design**: Bold, high-contrast UI with proper text wrapping
 - **Chat Management**: Rename chats, create new chats per project
 - **Skills Panel**: Access slash commands (⚡ button)
 
