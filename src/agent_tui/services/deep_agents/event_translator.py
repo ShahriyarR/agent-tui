@@ -70,6 +70,12 @@ class EventTranslator:
         self._first_ai_content: str = ""
         self._emitted_title_requested: bool = False
 
+    def reset(self) -> None:
+        """Reset state for a new conversation."""
+        self._first_human_content = ""
+        self._first_ai_content = ""
+        self._emitted_title_requested = False
+
     def translate(self, event: dict[str, Any]) -> Iterator[AgentEvent]:
         """Translate a raw DeepAgents event dict to AgentEvent stream.
 

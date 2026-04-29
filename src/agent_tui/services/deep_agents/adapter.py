@@ -230,6 +230,8 @@ class DeepAgentsAdapter:
         self._answer_event = asyncio.Event()
         self._user_answer = ""
 
+        self._translator.reset()
+
         agent = self._ensure_agent()
 
         config = {
