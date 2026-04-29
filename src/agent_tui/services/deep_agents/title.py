@@ -28,8 +28,9 @@ Title (max 40 chars, descriptive, no quotes):"""
             import os
             from langchain.chat_models import init_chat_model
 
-            if settings.openai_api_key:
-                os.environ["OPENAI_API_KEY"] = settings.openai_api_key
+            api_key = settings.openai_api_key or os.environ.get("OPENAI_API_KEY")
+            if api_key:
+                os.environ["OPENAI_API_KEY"] = api_key
 
             self._model = init_chat_model(
                 settings.deepagents_model,
