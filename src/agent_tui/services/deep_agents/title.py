@@ -26,9 +26,14 @@ Title (max 40 chars, descriptive, no quotes):"""
     def _get_model(self) -> Any:
         if self._model is None:
             import os
+            from pathlib import Path
+            from dotenv import load_dotenv
             from langchain.chat_models import init_chat_model
 
-            api_key = settings.openai_api_key or os.environ.get("OPENAI_API_KEY")
+            env_path = Path(__file__).parent.parent.parent.parent / ".env"
+            load_dotenv(env_path)
+
+            api_key = os.environ.get("OPENAI_API_KEY")
             if api_key:
                 os.environ["OPENAI_API_KEY"] = api_key
 

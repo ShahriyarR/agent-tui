@@ -48,7 +48,12 @@ def create_app() -> FastAPI:
 def main():
     """Entry point for web server."""
     import uvicorn
-    
+    from pathlib import Path
+    from dotenv import load_dotenv
+
+    env_path = Path(__file__).parent.parent.parent / ".env"
+    load_dotenv(env_path)
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

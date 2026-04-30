@@ -251,12 +251,20 @@ class EventTranslator:
     def _extract_first_human(self, data: dict) -> str | None:
         """Extract first human message content from checkpoint data."""
         try:
+            # Try channel_values first (older format)
             channel_values = data.get("channel_values", {})
             messages = channel_values.get("messages", [])
+
+            # Try input.messages format (newer LangGraph format)
+            if not messages and "input" in data:
+                input_data = data["input"]
+                if isinstance(input_data, dict):
+                    messages = input_data.get("messages", [])
+
             for msg in messages:
-                msg_type = getattr(msg, "type", None)
+                msg_type = msg.get("type") if isinstance(msg, dict) else getattr(msg, "type", None)
                 if msg_type in ("human", "user", "HumanMessage"):
-                    content = getattr(msg, "content", "")
+                    content = msg.get("content") if isinstance(msg, dict) else getattr(msg, "content", "")
                     if isinstance(content, str):
                         return content
                     if isinstance(content, list):

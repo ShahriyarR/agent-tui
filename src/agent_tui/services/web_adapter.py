@@ -28,7 +28,7 @@ class WebAdapter:
         """Stream events from agent and dispatch to WebSocket."""
         logger.info(f"[WEB_ADAPTER] Starting run_task for thread: {thread_id}")
         await self._send_status("thinking")
-        
+
         event_count = 0
         try:
             async for event in self.agent.stream(message, thread_id=thread_id):

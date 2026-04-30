@@ -128,6 +128,11 @@ class DeepAgentsAdapter:
 
         if self._agent is None:
             import os
+            from pathlib import Path
+            from dotenv import load_dotenv
+
+            env_path = Path(__file__).parent.parent.parent.parent.parent / ".env"
+            load_dotenv(env_path)
 
             from deepagents import create_deep_agent
             from langchain.agents.middleware import InterruptOnConfig
